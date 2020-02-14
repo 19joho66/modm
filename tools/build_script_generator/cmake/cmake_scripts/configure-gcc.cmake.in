@@ -11,19 +11,30 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_SYSTEM_PROCESSOR arm)
-find_package(PkgConfig)
+option(BUILD_TESTS "Build test programs" OFF)
+option(USE_DOCTEST "Use Doctest instead of Catch2" OFF)
 
-if(NOT TOOL_EXECUTABLE_PREFIX)
-%% if core.startswith("cortex-m")
-    set(TOOL_EXECUTABLE_PREFIX "arm-none-eabi-")
-%% elif core.startswith("avr")
-    set(TOOL_EXECUTABLE_PREFIX "avr-")
-%% else
+#find_package(PkgConfig)
+
+if(BUILD_TESTS)
+    set(CMAKE_SYSTEM_NAME Generic)
+    set(CMAKE_SYSTEM_PROCESSOR x64)
     set(TOOL_EXECUTABLE_PREFIX "")
-%% endif
+	add_definitions(-DUNIT_TEST)
+	add_definitions(-D_WIN32)
+	if(USE_DOCTEST)
+		add_definitions(-DUSE_DOCTEST)
+	endif()	
+else()
+    set(CMAKE_SYSTEM_NAME Generic)
+    set(CMAKE_SYSTEM_PROCESSOR arm)
+    INCLUDE(${CMAKE_CURRENT_LIST_DIR}/../../toolchain-settings.cmake)
+
+    if(NOT TOOL_EXECUTABLE_PREFIX)
+      set(TOOL_EXECUTABLE_PREFIX "arm-none-eabi-")
+   endif()
 endif()
+
 
 if(WIN32)
     set(TOOL_EXECUTABLE_SUFFIX ".exe")
