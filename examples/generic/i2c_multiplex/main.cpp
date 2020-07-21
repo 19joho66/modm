@@ -13,7 +13,6 @@
 #include <modm/architecture/interface/i2c_device.hpp>
 #include <modm/architecture/interface/i2c_multiplexer.hpp>
 #include <modm/driver/gpio/pca9548a.hpp>
-using namespace modm::literals;
 
 using MyI2cMaster = modm::platform::I2cMaster1;
 using Mpx = modm::Pca9548a<MyI2cMaster>;
@@ -95,8 +94,8 @@ DeviceThread::update()
 		MODM_LOG_DEBUG.printf("[dev  ] ping3\n");
 		MODM_LOG_DEBUG.printf("[dev  ] ping3 res: %d\n", PT_CALL(dev3.ping()));
 		// Do again in 1s
-		this->timeout.restart(1000);
-		PT_WAIT_UNTIL(this->timeout.isExpired());
+		timeout.restart(1s);
+		PT_WAIT_UNTIL(timeout.isExpired());
 	}
 
 	PT_END();

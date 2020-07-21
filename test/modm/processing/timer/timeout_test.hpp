@@ -13,18 +13,24 @@
 
 #include <unittest/testsuite.hpp>
 
+/// @ingroup modm_test_test_processing
 class TimeoutTest : public unittest::TestSuite
 {
 public:
 	virtual void
 	setUp();
 
+	void
+	testDefaultConstructor();
+
+	void
+	testZeroConstructor();
+
+	void
+	testNegativeConstructor();
 
 	void
 	testBasics();
-
-	void
-	testDefaultConstructor();
 
 	void
 	testTimeOverflow();

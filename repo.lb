@@ -24,7 +24,7 @@ from os.path import normpath
 
 # Check for miminum required lbuild version
 import lbuild
-min_lbuild_version = "1.12.1"
+min_lbuild_version = "1.13.2"
 if StrictVersion(getattr(lbuild, "__version__", "0.1.0")) < StrictVersion(min_lbuild_version):
     print("modm requires at least lbuild v{}, please upgrade!\n"
           "    pip3 install -U lbuild".format(min_lbuild_version))
@@ -85,6 +85,7 @@ class DevicesCache(dict):
                      "stm32g0", "stm32g4",
                      "stm32l1", "stm32l4",
                      "at90", "attiny", "atmega",
+                     "samd21",
                      "hosted"]
         device_file_names = [dfn for dfn in device_file_names if any(s in dfn for s in supported)]
 

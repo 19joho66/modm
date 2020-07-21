@@ -13,7 +13,8 @@
 
 #include <unittest/testsuite.hpp>
 
-class TimestampTest : public unittest::TestSuite
+/// @ingroup modm_test_test_processing
+class DurationTest : public unittest::TestSuite
 {
 public:
 	void

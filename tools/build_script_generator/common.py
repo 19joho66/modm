@@ -152,6 +152,8 @@ def common_avrdude_options(env):
         option_port = env.collector_values(":build:default.avrdude.port", option_port)[0]
     if not option_baudrate:
         option_baudrate = env.collector_values(":build:default.avrdude.baudrate", option_baudrate)[0]
+    if not option_options:
+        option_options = env.collector_values(":build:default.avrdude.options", option_options)[0]
     options = {
         "avrdude_programmer": option_programmer,
         "avrdude_port": option_port,
@@ -182,6 +184,14 @@ def common_collect_flags_for_scope(env, scope_filter=None):
 
 
 def common_compiler_flags(compiler, target):
+    """
+    Returns the common compile flags for a given compiler and target
+    in the form: `flags[name(.profile)] = list(compiler flags)`.
+
+    :param compiler: Currently supports only "GCC"
+    :param target: the target identifier
+    :returns: compiler flags dictionary
+    """
     flags = defaultdict(list)
     # flags for C **and** C++
     flags["ccflags"] = [
@@ -204,7 +214,6 @@ def common_compiler_flags(compiler, target):
 
         "-fdata-sections",
         "-ffunction-sections",
-        "-fshort-wchar",
         "-funsigned-char",
         "-fwrapv",
         # "-fmerge-all-constants",
@@ -212,6 +221,8 @@ def common_compiler_flags(compiler, target):
         "-g3",
         "-gdwarf",
     ]
+    if target.identifier["platform"] not in ["hosted"]:
+        flags["ccflags"].append("-fshort-wchar")
     if compiler.startswith("gcc"):
         flags["ccflags"] += [
             "-finline-limit=10000",
@@ -262,7 +273,6 @@ def common_compiler_flags(compiler, target):
             "-Wl,--fatal-warnings",
             "-Wl,--gc-sections",
             "-Wl,--relax",
-            "-Wl,--build-id=sha1",
             # "-Wl,-Map,{target_base}.map,--cref",
         ]
     # C Preprocessor defines
@@ -270,75 +280,6 @@ def common_compiler_flags(compiler, target):
     flags["cppdefines.debug"] = [
         "MODM_DEBUG_BUILD",
     ]
-    # Architecture flags for C, C++, Assembly and **Linker**
-    flags["archflags"] = []
-
-    # Target specific flags
-    core = target.get_driver("core")["type"]
-    if core.startswith("cortex-m"):
-        cpu = core.replace("fd", "").replace("f", "").replace("+", "plus")
-        flags["archflags"] += [
-            "-mcpu={}".format(cpu),
-            "-mthumb",
-        ]
-        single_precision = True
-        fpu = core.replace("cortex-m", "").replace("+", "")
-        if "f" in fpu:
-            fpu_spec = {
-                "4f": "-mfpu=fpv4-sp-d16",
-                "7f": "-mfpu=fpv5-sp-d16",
-                "7fd": "-mfpu=fpv5-d16",
-            }[fpu]
-            flags["archflags"] += [
-                "-mfloat-abi=hard",
-                fpu_spec
-            ]
-            single_precision = ("-sp-" in fpu_spec)
-        if single_precision:
-            flags["ccflags"] += [
-                "-fsingle-precision-constant",
-                "-Wdouble-promotion",
-            ]
-        flags["cxxflags"] += [
-            "-fno-exceptions",
-            "-fno-unwind-tables",
-            "-fno-rtti",
-            "-fno-threadsafe-statics",
-            "-fuse-cxa-atexit",
-        ]
-        flags["linkflags"] += [
-            "-Wl,--no-wchar-size-warning",
-            "-Wl,-wrap,_calloc_r",
-            "-Wl,-wrap,_free_r",
-            "-Wl,-wrap,_malloc_r",
-            "-Wl,-wrap,_realloc_r",
-            "--specs=nano.specs",
-            "--specs=nosys.specs",
-            "-nostartfiles",
-            "-L{linkdir}",
-            "-Tlinkerscript.ld",
-        ]
-
-    elif core.startswith("avr"):
-        # avr-gcc only accepts certain device strings for its -mmcu flag
-        # See https://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html
-        mmcu = target.partname.split("-")[0]
-        for suffix in {"v", "f", "l", "rc"}:
-            mmcu = mmcu[:-2] + mmcu[-2:].replace(suffix, "")
-
-        flags["archflags"] += [
-            "-mmcu={}".format(mmcu),
-        ]
-        flags["cxxflags"] += [
-            "-fno-exceptions",
-            "-fno-unwind-tables",
-            "-fno-rtti",
-            "-fno-threadsafe-statics",
-        ]
-        flags["linkflags"] += [
-            "-L{linkdir}",
-            "-Tlinkerscript.ld",
-        ]
 
     return flags
 

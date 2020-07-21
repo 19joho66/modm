@@ -11,7 +11,6 @@
 #include <modm/board.hpp>
 #include <modm/debug/logger.hpp>
 #include <modm/processing/timer.hpp>
-using namespace modm::literals;
 
 // ----------------------------------------------------------------------------
 // Set the log level
@@ -50,12 +49,12 @@ main()
 
 	while (true) {
         Board::LedBlue::set();
-        timeout.restart(100);
+        timeout.restart(100ms);
         while(not timeout.isExpired())
         	{};
 
         Board::LedBlue::reset();
-        timeout.restart(900);
+        timeout.restart(900ms);
         while(not timeout.isExpired())
         	{};
 

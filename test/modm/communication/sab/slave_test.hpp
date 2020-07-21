@@ -14,8 +14,9 @@
 #include <unittest/testsuite.hpp>
 
 #include <modm/communication/sab/slave.hpp>
-#include "fake_io_device.hpp"
+#include <modm-test/mock/io_device.hpp>
 
+/// @ingroup modm_test_test_communication
 class SlaveTest : public unittest::TestSuite
 {
 public:
@@ -46,7 +47,7 @@ public:
 
 
 protected:
-	typedef modm::sab::Interface< FakeIODevice > TestingInterface;
+	typedef modm::sab::Interface< modm_test::FakeIODevice > TestingInterface;
 	typedef modm::sab::Slave< TestingInterface > TestingSlave;
 
 	TestingSlave *slave;

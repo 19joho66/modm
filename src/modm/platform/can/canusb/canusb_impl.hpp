@@ -53,7 +53,6 @@ template <typename SerialPort>
 bool
 modm::platform::CanUsb<SerialPort>::open(bitrate_t canBitrate)
 {
-	using namespace literals;
 	if (this->serialPort.open())
 	{
 		MODM_LOG_DEBUG << MODM_FILE_INFO << "SerialPort opened in canusb" << modm::endl;
@@ -61,7 +60,7 @@ modm::platform::CanUsb<SerialPort>::open(bitrate_t canBitrate)
 		this->serialPort.write("C\r");
 
 		modm::ShortTimeout timeout;
-		timeout.restart(500);
+		timeout.restart(500ms);
 		while (not timeout.isExpired())
 		{
 		}
@@ -102,7 +101,7 @@ modm::platform::CanUsb<SerialPort>::open(bitrate_t canBitrate)
 
 
 
-		timeout.restart(500);
+		timeout.restart(500ms);
 		while (not this->serialPort.read(a))
 		{
 			if (timeout.isExpired())
@@ -120,7 +119,7 @@ modm::platform::CanUsb<SerialPort>::open(bitrate_t canBitrate)
 		// Open CAN channel
 		this->serialPort.write("O\r");
 		MODM_LOG_DEBUG << MODM_FILE_INFO << "written 'O'" << modm::endl;
-		timeout.restart(500);
+		timeout.restart(500ms);
 		while (not this->serialPort.read(a))
 		{
 			if (timeout.isExpired())
@@ -181,6 +180,7 @@ template <typename SerialPort>
 bool
 modm::platform::CanUsb<SerialPort>::getMessage(can::Message& message)
 {
+	MutexGuard stateGuard(readBufferLock);
 	if (not this->readBuffer.empty())
 	{
 		message = this->readBuffer.front();
@@ -230,6 +230,7 @@ modm::platform::CanUsb<SerialPort>::update()
 			if (modm::CanLawicelFormatter::convertToCanMessage(
 					this->tmpRead.c_str(), message))
 			{
+				MutexGuard stateGuard(readBufferLock);
 				this->readBuffer.push(message);
 			}
 		}

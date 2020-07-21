@@ -15,7 +15,6 @@
 #include <modm/debug/logger.hpp>
 #include <modm/processing/timer.hpp>
 #include <inttypes.h>
-using namespace modm::literals;
 
 modm::IODeviceWrapper< Usart2, modm::IOBuffer::BlockIfFull > loggerDevice;
 
@@ -47,16 +46,16 @@ setDirection(Direction dir)
 	} else {
 		direction = dir;
 		static uint16_t counter = 0;
-		static modm::Timestamp lastTimestamp = modm::Clock::now();
+		static modm::Duration lastTimestamp = modm::Clock::now().time_since_epoch();
 
-		modm::Timestamp timestamp = modm::Clock::now();
+		modm::Duration timestamp = modm::Clock::now().time_since_epoch();
 
 		MODM_LOG_INFO.printf("\e[39m\n%04" PRId16 " %02" PRId32 ":%03" PRId32 " +%01" PRId32 ":%03" PRId32 " ",
 				counter,
-				timestamp.getTime() / 1000,
-				timestamp.getTime() % 1000,
-				(timestamp.getTime() - lastTimestamp.getTime()) / 1000,
-				(timestamp.getTime() - lastTimestamp.getTime()) % 1000);
+				timestamp.count() / 1000,
+				timestamp.count() % 1000,
+				(timestamp.count() - lastTimestamp.count()) / 1000,
+				(timestamp.count() - lastTimestamp.count()) % 1000);
 
 		switch (direction)
 		{
@@ -117,7 +116,7 @@ main()
 			Board::LedGreen::toggle();
 		}
 
-		modm::delayMicroseconds(100);
+		modm::delay(100us);
 	}
 
 	return 0;

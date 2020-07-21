@@ -11,7 +11,6 @@
 
 #include <modm/board.hpp>
 #include <modm/driver/display/ssd1306.hpp>
-using namespace modm::literals;
 
 /**
  * Example to demonstrate a MODM graphics display SSD1306.
@@ -41,7 +40,7 @@ main()
 	display << "Hello World!";
 	display.update();
 
-	modm::ShortPeriodicTimer timer(1000);
+	modm::ShortPeriodicTimer timer(1s);
 	uint16_t counter(0);
 
 	while (true)

@@ -15,10 +15,10 @@ process that you can fine-tune to your needs.
 - [This project has a homepage](http://modm.io).<!--/webignore-->
 - Check out our [install instructions][install] and our [getting started guide][guide].
 - Feast your eyes on [lots of working examples][examples].
-- Our CI checks every contribution for regressions: ![Build Status](https://circleci.com/gh/modm-io/modm/tree/develop.svg?style=shield)
+- Our CI checks every contribution for regressions.
 - We care [about testing modm][testing].
+- [API reference is available here][api-docs].
 
-<!-- - [API reference is available here][reference]. -->
 <!-- - [Check out our latest quarterly release][releases] with a [beautiful changelog][changelog]. -->
 
 This project also has a [technical blog][blog] to document larger design concepts.
@@ -70,7 +70,8 @@ git clone --recurse-submodules https://github.com/modm-io/modm.git
 
 ## Targets
 
-modm can generate code for <!--avrcount-->530<!--/avrcount--> AVR and <!--stmcount-->1857<!--/stmcount-->
+modm can generate code for <!--avrcount-->506<!--/avrcount--> AVR,
+<!--samcount-->163<!--/samcount--> SAM and <!--stmcount-->1959<!--/stmcount-->
 STM32 devices, however, there are different levels of support and testing.
 
 <center>
@@ -81,6 +82,7 @@ STM32 devices, however, there are different levels of support and testing.
 | STM32F2       | ★★★★    | STM32F3       | ★★★★★   | STM32F4       | ★★★★★   |
 | STM32F7       | ★★★★    | STM32L1       | ★★★★    | STM32L4       | ★★★★    |
 | STM32L4+      | ★★★★    | STM32G0       | ★★★★    | STM32G4       | ★★★★    |
+| SAMD21        | ★★      |               |         |               |         |
 
 </center>
 
@@ -130,18 +132,23 @@ documentation.
 <td align="center">DISCO-L152RC</td>
 <td align="center">DISCO-L476VG</td>
 </tr><tr>
+<td align="center">FEATHER-M0</td>
+<td align="center">MEGA-2560-PRO</td>
 <td align="center">MINI-F401</td>
 <td align="center">MINI-F411</td>
+</tr><tr>
 <td align="center">NUCLEO-F031K6</td>
 <td align="center">NUCLEO-F042K6</td>
-</tr><tr>
 <td align="center">NUCLEO-F103RB</td>
 <td align="center">NUCLEO-F303K8</td>
+</tr><tr>
+<td align="center">NUCLEO-F303RE</td>
 <td align="center">NUCLEO-F401RE</td>
 <td align="center">NUCLEO-F411RE</td>
-</tr><tr>
 <td align="center">NUCLEO-F429ZI</td>
+</tr><tr>
 <td align="center">NUCLEO-F446RE</td>
+<td align="center">NUCLEO-F746ZG</td>
 <td align="center">NUCLEO-G071RB</td>
 <td align="center">NUCLEO-G474RE</td>
 </tr><tr>
@@ -150,6 +157,7 @@ documentation.
 <td align="center">NUCLEO-L476RG</td>
 <td align="center">OLIMEXINO-STM32</td>
 </tr><tr>
+<td align="center">SAMD21-MINI</td>
 <td align="center">STM32F030F4P6-DEMO</td>
 </tr>
 </table>
@@ -186,43 +194,50 @@ can easily configure them for you specific needs.
 <td align="center">DS1631</td>
 <td align="center">DS18B20</td>
 <td align="center">EA-DOG</td>
+<td align="center">ENCODER-OUTPUT</td>
 <td align="center">FT245</td>
-<td align="center">FT6X06</td>
 </tr><tr>
+<td align="center">FT6X06</td>
 <td align="center">HCLAx</td>
 <td align="center">HD44780</td>
 <td align="center">HMC58x</td>
 <td align="center">HMC6343</td>
+<td align="center">HX711</td>
+</tr><tr>
 <td align="center">I2C-EEPROM</td>
 <td align="center">ITG3200</td>
-</tr><tr>
 <td align="center">L3GD20</td>
 <td align="center">LAWICEL</td>
 <td align="center">LIS302DL</td>
 <td align="center">LIS3DSH</td>
-<td align="center">LM75</td>
-<td align="center">LSM303A</td>
 </tr><tr>
+<td align="center">LIS3MDL</td>
+<td align="center">LM75</td>
+<td align="center">LP503X</td>
+<td align="center">LSM303A</td>
+<td align="center">LSM6DS33</td>
 <td align="center">LTC2984</td>
+</tr><tr>
 <td align="center">MAX6966</td>
 <td align="center">MAX7219</td>
 <td align="center">MCP23X17</td>
 <td align="center">MCP2515</td>
 <td align="center">NOKIA5110</td>
-</tr><tr>
 <td align="center">NRF24</td>
+</tr><tr>
 <td align="center">TFT-DISPLAY</td>
 <td align="center">PAT9125EL</td>
 <td align="center">PCA8574</td>
 <td align="center">PCA9535</td>
 <td align="center">PCA9548A</td>
-</tr><tr>
 <td align="center">PCA9685</td>
+</tr><tr>
 <td align="center">SIEMENS-S65</td>
 <td align="center">SIEMENS-S75</td>
 <td align="center">SK6812</td>
 <td align="center">SK9822</td>
 <td align="center">SSD1306</td>
+<td align="center">SX1276</td>
 </tr><tr>
 <td align="center">TCS3414</td>
 <td align="center">TCS3472</td>
@@ -304,7 +319,7 @@ Georgi Grinshpun ([\@georgi-g](https://github.com/georgi-g)) and
 [contrib]:         https://github.com/modm-io/modm/tree/develop/CONTRIBUTING.md
 [devboards]:       https://github.com/modm-io/modm/tree/develop/src/modm/board
 [drivers]:         https://github.com/modm-io/modm/tree/develop/src/modm/driver
-[eurobot]:         http://www.eurobot.org/
+[eurobot]:         https://www.eurobot.org/
 [examples]:        https://github.com/modm-io/modm/tree/develop/examples
 [guide]:           https://modm.io/guide/getting-started
 [install]:         https://modm.io/guide/installation
@@ -313,8 +328,9 @@ Georgi Grinshpun ([\@georgi-g](https://github.com/georgi-g)) and
 [modm-devices]:    https://github.com/modm-io/modm-devices
 [porting]:         https://github.com/modm-io/modm/tree/develop/docs/PORTING.md
 [prs]:             https://github.com/modm-io/modm/pulls
-[rca_ev]:          http://www.roboterclub.rwth-aachen.de/
+[rca_ev]:          https://www.roboterclub.rwth-aachen.de/
 [reference]:       https://modm.io/reference/api
 [releases]:        https://github.com/modm-io/modm/releases
 [testing]:         https://modm.io/guide/testing
+[api-docs]:        https://docs.modm.io/
 <!--/links-->

@@ -20,7 +20,6 @@ def prepare(module, options):
         return False
 
     module.depends(
-        ":architecture:assert",
         ":architecture:memory",
         ":debug")
 
@@ -28,30 +27,32 @@ def prepare(module, options):
 
 def build(env):
     target = env[":target"].identifier
-    env.substitutions = {"target": target}
+    env.substitutions = {"target": target, "core": "hosted"}
     env.outbasepath = "modm/src/modm/platform/core"
 
-    env.copy("memory.cpp")
+    if env.has_module(":architecture:memory"):
+        env.copy("memory.cpp")
 
     if env.has_module(":architecture:atomic"):
-        env.copy("atomic_lock.hpp")
+        env.copy("atomic_lock_impl.hpp")
 
     if env.has_module(":architecture:unaligned"):
-        env.copy("../avr/unaligned.hpp", "unaligned.hpp")
+        env.copy("../avr/unaligned_impl.hpp", "unaligned_impl.hpp")
 
     if env.has_module(":architecture:accessor"):
-        env.copy("../cortex/flash_reader.hpp", "flash_reader.hpp")
+        env.copy("../cortex/flash_reader_impl.hpp", "flash_reader_impl.hpp")
 
     if env.has_module(":architecture:clock"):
-        # modm-test implements the clock methods itself
-        if not env.has_module(":test:architecture"):
-            env.template("clock.cpp.in")
+        env.copy("clock.cpp")
 
     if target.family == "windows":
-        env.log.error("Assertions are not implemented!")
+        if env.has_module(":architecture:assert"):
+            env.log.error("Assertions are not implemented!")
         if env.has_module(":architecture:delay"):
             env.log.error("Delay functions are not implemented!")
     else:
-        env.template("assert.cpp.in")
+        if env.has_module(":architecture:assert"):
+            env.template("../cortex/assert.cpp.in", "assert.cpp")
+            env.template("../cortex/assert_impl.hpp.in", "assert_impl.hpp")
         if env.has_module(":architecture:delay"):
-            env.template("delay.hpp.in")
+            env.template("delay_impl.hpp.in")

@@ -15,7 +15,6 @@
 #include <modm/processing.hpp>
 #include <modm/driver/inertial/bno055.hpp>
 #include <modm/debug.hpp>
-using namespace modm::literals;
 
 // Set the log level
 #undef	MODM_LOG_LEVEL
@@ -84,7 +83,7 @@ public:
 	}
 
 private:
-	modm::ShortPeriodicTimer timer{100};
+	modm::ShortPeriodicTimer timer{100ms};
 };
 
 ThreadOne one;
@@ -102,7 +101,7 @@ main()
 
 	MODM_LOG_INFO << "\n\nWelcome to BNO055 demo!\n\n" << modm::endl;
 
-	modm::ShortPeriodicTimer tmr(500);
+	modm::ShortPeriodicTimer tmr(500ms);
 
 	// Board::D15::setOutput();
 

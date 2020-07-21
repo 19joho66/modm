@@ -50,12 +50,12 @@ def build(project):
 	if ":build:scons" in project_cfg:
 		commands.append("python3 `which scons` build --cache-show --random")
 	if ":build:cmake" in project_cfg:
-		commands.append("make cmake && make build-release")
+		commands.append("make cmake && make build")
 
 	rcs = 0
 	for command in commands:
 		output = ["=" * 90, "Building: {} with {}".format(
-		          path, "SCons" if "scons" in command else "CMake")]
+		          path / "main.cpp", "SCons" if "scons" in command else "CMake")]
 		rc, ro = run(path, command)
 		rcs += rc
 		print("\n".join(output + [ro]))

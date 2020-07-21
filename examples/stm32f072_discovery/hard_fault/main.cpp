@@ -11,7 +11,6 @@
 
 #include <modm/board.hpp>
 #include <modm/debug/logger.hpp>
-using namespace modm::literals;
 
 // ----------------------------------------------------------------------------
 // Set the log level
@@ -83,7 +82,7 @@ main()
 
 	while (true)
 	{
-		modm::delayMilliseconds(1000);
+		modm::delay(1000ms);
 		Board::LedUp::toggle();
 	}
 

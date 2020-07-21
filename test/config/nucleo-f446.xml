@@ -2,10 +2,11 @@
 <library>
   <extends>modm:nucleo-f446re</extends>
   <options>
-    <option name="modm:build:scons:unittest.source">../../build/unittest/nucleo-f446/modm-test</option>
-    <option name="modm:build:scons:unittest.runner">../runner/stm32.cpp.in</option>
+    <option name="modm:build:build.path">../../build/generated-unittest/nucleo-f446/</option>
+    <option name="modm:build:scons:unittest.source">../../build/generated-unittest/nucleo-f446/modm-test</option>
   </options>
   <modules>
+    <module>modm:platform:heap</module>
     <module>modm-test:test:**</module>
   </modules>
 </library>

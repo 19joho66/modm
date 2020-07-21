@@ -59,8 +59,8 @@ int main()
 	}
 
 //	modm::ShortPeriodicTimer divide_timer((max_channel*rx_settle)/1000 * divider);
-	modm::ShortPeriodicTimer divide_timer(500);
-	modm::ShortPeriodicTimer refreshTerminal(500);
+	modm::ShortPeriodicTimer divide_timer(500ms);
+	modm::ShortPeriodicTimer refreshTerminal(500ms);
 
 	bool divide_now = false;
 
@@ -79,9 +79,9 @@ int main()
 			Nrf1Phy::writeRegister(Nrf1Phy::NrfRegister::RF_CH, i + channel_start);
 
 			Nrf1Ce::set();
-			modm::delayMicroseconds(rx_settle);
+			modm::delay_us(rx_settle);
 			Nrf1Ce::reset();
-			modm::delayMicroseconds(2);
+			modm::delay(2us);
 			channel_info[i] += 5*Nrf1Phy::readRegister(Nrf1Phy::NrfRegister::RPD);
 
 			if(channel_info[i] > max)

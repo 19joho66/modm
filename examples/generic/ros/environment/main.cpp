@@ -30,7 +30,6 @@
 
 #include <ros/node_handle.h>
 #include <modm/communication/ros.hpp>
-using namespace modm::literals;
 
 #undef	MODM_LOG_LEVEL
 #define	MODM_LOG_LEVEL modm::log::DISABLED
@@ -79,7 +78,7 @@ main()
 	Bme280Thread bme280thread;
 	DisplayThread display_thread;
 
-	modm::ShortPeriodicTimer timer(1000);
+	modm::ShortPeriodicTimer timer(1s);
 	bool bme_sampling(false);
 
 	while (true)

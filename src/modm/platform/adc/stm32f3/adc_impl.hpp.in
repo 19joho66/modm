@@ -63,7 +63,7 @@ modm::platform::Adc{{ id }}::initialize(const ClockMode clk,
 	// enable regulator
 	ADC{{ id }}->CR &= ~ADC_CR_ADVREGEN;
 	ADC{{ id }}->CR |= static_cast<uint32_t>(VoltageRegulatorState::Enabled);
-	modm::delayMicroseconds(10);	// FIXME: this is ugly -> find better solution
+	modm::delay_us(10);	// FIXME: this is ugly -> find better solution
 
 	// Clear ready flag
 	ADC{{ id }}->ISR |= ADC_ISR_ADRDY;
@@ -185,7 +185,8 @@ void
 modm::platform::Adc{{ id }}::startConversion(void)
 {
 	// TODO: maybe add more interrupt flags
-	acknowledgeInterruptFlag(InterruptFlag::EndOfSampling | InterruptFlag::Overrun);
+	acknowledgeInterruptFlag(InterruptFlag::EndOfRegularConversion |
+			InterruptFlag::EndOfSampling | InterruptFlag::Overrun);
 	// starts single conversion for the regular group
 	ADC{{ id }}->CR |= ADC_CR_ADSTART;
 }

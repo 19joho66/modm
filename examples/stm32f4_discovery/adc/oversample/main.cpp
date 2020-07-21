@@ -13,7 +13,6 @@
 #include <modm/debug/logger.hpp>
 #include <modm/processing/timer.hpp>
 #include <modm/driver/adc/adc_sampler.hpp>
-using namespace modm::literals;
 
 // ----------------------------------------------------------------------------
 // Set the log level
@@ -37,7 +36,7 @@ Adc2::Channel sensorMapping[3] = {
 uint32_t sensorData[3];
 // 3 channels and averages of 100 oversamples
 typedef modm::AdcSampler< AdcInterrupt2, 3, 100 > sensors;
-modm::ShortTimeout timeout(100);
+modm::ShortTimeout timeout(100ms);
 
 // ----------------------------------------------------------------------------
 int
@@ -71,7 +70,7 @@ main()
 
 			// start another readout
 			sensors::startReadout();
-			timeout.restart(200);
+			timeout.restart(200ms);
 		}
 	}
 

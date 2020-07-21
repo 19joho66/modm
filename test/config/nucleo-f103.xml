@@ -2,17 +2,18 @@
 <library>
   <extends>modm:nucleo-f103rb</extends>
   <options>
-    <option name="modm:build:scons:unittest.source">../../build/unittest/nucleo-f103/modm-test</option>
-    <option name="modm:build:scons:unittest.runner">../runner/stm32.cpp.in</option>
+    <option name="modm:build:build.path">../../build/generated-unittest/nucleo-f103/</option>
+    <option name="modm:build:scons:unittest.source">../../build/generated-unittest/nucleo-f103/modm-test</option>
   </options>
   <modules>
+    <module>modm:platform:heap</module>
     <!-- Not everything fits -->
     <!-- <module>modm-test:test:architecture</module>
     <module>modm-test:test:communication</module>
     <module>modm-test:test:container</module>
-    <module>modm-test:test:driver</module> -->
+    <module>modm-test:test:driver</module>
+    <module>modm-test:test:io</module> -->
 
-    <module>modm-test:test:io</module>
     <module>modm-test:test:platform:**</module>
     <module>modm-test:test:processing</module>
     <module>modm-test:test:ui</module>

@@ -13,7 +13,6 @@
 
 #include <modm/board.hpp>
 #include <modm/debug/logger.hpp>
-using namespace modm::literals;
 
 // ----------------------------------------------------------------------------
 // Set the log level
@@ -62,7 +61,7 @@ main()
 	{
 		Adc2::startConversion();
 
-		modm::delayMilliseconds(500);
+		modm::delay(500ms);
 	}
 
 	return 0;

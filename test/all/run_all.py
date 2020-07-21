@@ -25,6 +25,7 @@ from pathlib import Path
 LOGGER = logging.getLogger("run")
 LBUILD_COMMAND = ["lbuild"]
 cpus = 4 if os.getenv("CIRCLECI") else os.cpu_count()
+build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../build"))
 
 class CommandException(Exception):
     def __init__(self, output, errors):
@@ -50,7 +51,7 @@ def run_lbuild(command):
     return output
 
 def run_scons(tempdir):
-    cmdline = ["scons", "-C", tempdir, "--random", "--cache-show"]
+    cmdline = ["python3 $(which scons)", "-C", tempdir, "--random", "--cache-show"]
     return run_command(cmdline)
 
 def build_code(tempdir):
@@ -78,13 +79,14 @@ class TestRun:
     def run(self):
         start_time = time.time()
 
-        with tempfile.TemporaryDirectory() as tempdir:
+        prefix = os.path.join(build_dir, "test_all_")
+        with tempfile.TemporaryDirectory(prefix=prefix) as tempdir:
             if self.device.startswith("at"):
                 lbuild_command = ["-c", "avr.xml"]
                 shutil.copyfile("avr.cpp", os.path.join(tempdir, "main.cpp"))
-            elif self.device.startswith("stm32"):
-                lbuild_command = ["-c", "stm32.xml", "-D:::main_stack_size=512"]
-                shutil.copyfile("stm32.cpp", os.path.join(tempdir, "main.cpp"))
+            else:
+                lbuild_command = ["-c", "cortex-m.xml", "-D:::main_stack_size=512"]
+                shutil.copyfile("cortex-m.cpp", os.path.join(tempdir, "main.cpp"))
 
             if self.cache_dir:
                 lbuild_command.append("-D:::cache_dir={}".format(self.cache_dir))

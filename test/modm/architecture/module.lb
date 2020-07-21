@@ -17,22 +17,16 @@ def init(module):
 
 def prepare(module, options):
     module.depends(
-        ":architecture:accessor",
-        ":architecture:atomic",
-        ":architecture:can",
-        ":architecture:clock",
-        ":architecture:heap",
-        ":architecture:register")
+        ":mock:clock",
+        "modm:architecture:accessor",
+        "modm:architecture:atomic",
+        "modm:architecture:can",
+        "modm:architecture:clock",
+        "modm:architecture:register")
     return True
 
 
 def build(env):
-    env.outbasepath = "modm-test/src/modm/architecture"
+    env.outbasepath = "modm-test/src/modm-test/architecture"
+    env.copy('.')
 
-    ignore_patterns = []
-    target = env[":target"].identifier
-    if target["platform"] == "hosted":
-        # Test does not work on hosted
-        ignore_patterns.append("*driver/clock_test.*")
-
-    env.copy('.', ignore=env.ignore_patterns(*ignore_patterns))

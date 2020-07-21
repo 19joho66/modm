@@ -37,7 +37,7 @@ void modm_hardfault_entry()
 	// Put hardware in safe mode here
 	Board::Leds::set();
 	// But do not wait forever
-	modm::delayMilliseconds(100);
+	modm::delay(100ms);
 	// Do not depend on interrupts in this function (buffered UART etc!)
 }
 
@@ -54,7 +54,11 @@ main()
 	if (FaultReporter::hasReport())
 	{
 		MODM_LOG_ERROR << "\n\nHardFault! Copy the data into a 'coredump.txt' file, ";
-		MODM_LOG_ERROR << "then execute\n\n\tscons postmortem firmware=" << modm::hex;
+		MODM_LOG_ERROR << "then execute\n\n\tscons debug-coredump ";
+#ifdef MODM_DEBUG_BUILD
+		MODM_LOG_ERROR << "profile=debug ";
+#endif
+		MODM_LOG_ERROR << "firmware=" << modm::hex;
 		for (const auto data : FaultReporter::buildId()) MODM_LOG_ERROR << data;
 		MODM_LOG_ERROR << "\n\n";
 		for (const auto data : FaultReporter())
@@ -75,7 +79,7 @@ main()
 
 		function2(23, 43);
 
-		modm::delayMilliseconds(250);
+		modm::delay(250ms);
 	}
 
 	return 0;

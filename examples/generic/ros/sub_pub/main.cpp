@@ -23,7 +23,6 @@
 
 #include <ros/node_handle.h>
 #include <modm/communication/ros.hpp>
-using namespace modm::literals;
 
 #undef	MODM_LOG_LEVEL
 #define	MODM_LOG_LEVEL modm::log::DISABLED
@@ -98,7 +97,7 @@ main()
 	// Make sure to publish on boot
 	bool button_state = not Board::Button::read();
 
-	modm::ShortPeriodicTimer heartbeat(1000);
+	modm::ShortPeriodicTimer heartbeat(1s);
 	while(true)
 	{
 		bool button_read = Board::Button::read();

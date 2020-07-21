@@ -16,7 +16,6 @@
 #include <modm/driver/inertial/l3gd20.hpp>
 #include <modm/processing.hpp>
 #include <modm/math/filter.hpp>
-using namespace modm::literals;
 
 // Example for L3gd20 gyroscope connected to SPI USART interface
 
@@ -53,9 +52,9 @@ public:
 			if (PT_CALL(gyro.ping()))
 				break;
 			// otherwise, try again in 100ms
-			this->timeout.restart(100);
+			timeout.restart(100ms);
 			Board::LedD13::set();
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			PT_WAIT_UNTIL(timeout.isExpired());
 			Board::LedD13::reset();
 		}
 
@@ -74,8 +73,8 @@ public:
 								 double(averageY.getValue()),
 								 double(averageZ.getValue()));
 
-			this->timeout.restart(50);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(50ms);
+			PT_WAIT_UNTIL(timeout.isExpired());
 		}
 
 		PT_END();

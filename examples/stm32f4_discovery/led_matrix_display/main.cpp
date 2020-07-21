@@ -13,7 +13,6 @@
 #include <modm/board.hpp>
 #include <modm/processing/timer.hpp>
 #include <modm/driver/display/max7219_matrix.hpp>
-using namespace modm::literals;
 
 /**
  * Example to demonstrate a MODM graphics display made
@@ -65,7 +64,7 @@ main()
 	ledMatrixDisplay.setFont(modm::font::FixedWidth5x8);
 	ledMatrixDisplay.setCursor(0, 0);
 
-	modm::ShortPeriodicTimer countdownTimer(100);
+	modm::ShortPeriodicTimer countdownTimer(100ms);
 
 	while (true)
 	{

@@ -1,0 +1,55 @@
+/*
+ * Copyright (c) 2019, Ethan Slattery
+ * Copyright (c) 2020, Erik Henriksson
+ *
+ * This file is part of the modm project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+// ----------------------------------------------------------------------------
+
+#include <cmath>
+#include "modm/math/units.hpp"
+
+namespace modm::platform
+{
+/// @cond
+extern uint16_t delay_fcpu_MHz;
+extern uint16_t delay_ns_per_loop;
+/// @endcond
+
+template< uint32_t Core_Hz >
+void
+GenericClockController::updateCoreFrequency()
+{
+	delay_fcpu_MHz = Core_Hz / 1'000'000;
+	delay_ns_per_loop = ::round({{loops}}000.f / (Core_Hz / 1'000'000));
+}
+
+template< uint32_t Core_Hz >
+uint32_t
+GenericClockController::setFlashLatency()
+{
+	// See table 41.11 (NVM Characteristics) in the datasheet
+	if (Core_Hz > 24_MHz) {
+		NVMCTRL->CTRLB.bit.RWS = NVMCTRL_CTRLB_RWS_HALF_Val;
+	} else {
+		NVMCTRL->CTRLB.bit.RWS = NVMCTRL_CTRLB_RWS_SINGLE_Val;
+	}
+	return Core_Hz;
+}
+
+	template< ClockPeripheral peripheral >
+	void
+	GenericClockController::connect(ClockGenerator clockGen)
+	{
+		GCLK->CLKCTRL.reg =
+				GCLK_CLKCTRL_CLKEN |
+				GCLK_CLKCTRL_GEN(uint32_t(clockGen)) |
+				GCLK_CLKCTRL_ID(uint32_t(peripheral));
+	}
+
+}
+

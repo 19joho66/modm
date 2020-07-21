@@ -13,80 +13,69 @@
 
 def init(module):
     module.name = ":platform:core"
-    module.description = "AVR Core"
+    module.description = FileReader("module.md")
 
 def prepare(module, options):
     if not options[":target"].has_driver("core:avr*"):
         return False
 
-    module.depends(
-        ":architecture:interrupt",
-        ":architecture:assert",
-        ":architecture:memory",
-        ":stdc++",
-        )
-
-    module.add_option(
-        EnumerationOption(
-            name="ram_block_length",
-            description="",
-            enumeration=["2", "4", "8", "16", "32", "64"],
-            default="16"))
     module.add_option(
         NumericOption(
-            name="ram_length",
-            description="",
-            minimum=64,
-            maximum=32768,
-            default=1024))
+            name="f_cpu",
+            description="CPU clock frequency",
+            minimum=1,
+            maximum=32000000))
 
+    module.depends(":architecture:interrupt", ":stdc++")
     return True
 
 def build(env):
-    device = env[":target"]
-    driver = device.get_driver("core")
-
-    properties = device.properties
-    properties["target"] = target = device.identifier
-    properties["driver"] = driver
+    target = env[":target"]
+    is_xmega = "xmega" in target.get_driver("core")["type"]
 
     env.outbasepath = "modm/link"
     env.copy("linkerscript/linkerscript.ld", "linkerscript.ld")
+    env.collect(":build:linkflags", "-L{project_source_dir}", "-Tmodm/link/linkerscript.ld")
 
-    env.substitutions = properties
+    env.substitutions = {
+        "target": target.identifier,
+        "core": target.get_driver("core")["type"],
+        "f_cpu": env["f_cpu"],
+        "shift": int(3e9/env["f_cpu"]).bit_length() - 1,
+    }
     env.outbasepath = "modm/src/modm/platform/core"
 
     env.copy("main.hpp")
-    # dealing with C++
-    env.copy("cxxabi.cpp")
-
-    # everything to do with dynamic memory
-    env.copy("newdelete.cpp")
-    env.copy("ram.hpp")
-    env.template("ram.cpp.in")
 
     # dealing with runtime assertions
-    env.copy("assert.cpp")
+    if env.has_module(":architecture:assert"):
+        env.template("../cortex/assert.cpp.in", "assert.cpp")
+        env.template("../cortex/assert_impl.hpp.in", "assert_impl.hpp")
 
     if env.has_module(":architecture:atomic"):
-        env.copy("atomic_lock.hpp")
+        env.copy("atomic_lock_impl.hpp")
 
     if env.has_module(":architecture:unaligned"):
-        env.copy("unaligned.hpp")
+        env.copy("unaligned_impl.hpp")
 
     if env.has_module(":architecture:accessor"):
-        env.copy("flash_reader.hpp")
+        env.copy("flash_reader_impl.hpp")
 
     if env.has_module(":architecture:delay"):
-        env.copy("delay.hpp")
-
-    if env.has_module(":architecture:clock"):
-        # modm-test implements the clock methods itself
-        if not env.has_module(":test:architecture"):
-            env.copy("clock.cpp")
+        env.template("delay_impl.hpp.in")
 
     env.template("interrupts.hpp.in")
 
-    if "xmega" in driver["type"]:
+    if is_xmega:
         env.copy("utils.hpp")
         env.copy("utils.cpp")
+
+    # avr-gcc only accepts certain device strings for its -mmcu flag
+    # See https://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html
+    mmcu = target.partname.split("-")[0]
+    for suffix in {"v", "f", "l", "rc"}:
+        mmcu = mmcu[:-2] + mmcu[-2:].replace(suffix, "")
+    env.collect(":build:archflags","-mmcu={}".format(mmcu))
+    env.collect(":build:cppdefines", "F_CPU={}".format(env["f_cpu"]))
+
+

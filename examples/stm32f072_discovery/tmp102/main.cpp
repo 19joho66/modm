@@ -11,7 +11,6 @@
 // ----------------------------------------------------------------------------
 
 #include <modm/board.hpp>
-using namespace modm::literals;
 
 #include <modm/processing/timer.hpp>
 #include <modm/processing/protothread.hpp>
@@ -47,8 +46,8 @@ public:
 			if (PT_CALL(temp.ping()))
 				break;
 			// otherwise, try again in 100ms
-			this->timeout.restart(100);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(100ms);
+			PT_WAIT_UNTIL(timeout.isExpired());
 		}
 
 
@@ -85,8 +84,8 @@ public:
 				stream << modm::endl;
 				if (result) stream << "Heat me up!" << modm::endl;
 			}
-			this->timeout.restart(200);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(200ms);
+			PT_WAIT_UNTIL(timeout.isExpired());
 			Board::LedDown::toggle();
 		}
 

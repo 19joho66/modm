@@ -11,7 +11,6 @@
 
 #include <modm/board.hpp>
 #include <modm/debug/logger.hpp>
-using namespace modm::literals;
 
 #include <modm/platform/comp/comp_2.hpp>
 
@@ -60,7 +59,7 @@ main()
 
 	while (true)
 	{
-		modm::delayMilliseconds(250);
+		modm::delay(250ms);
 		MODM_LOG_INFO << "Comparator: " << Comparator::getOutput() << modm::endl;
 		Board::LedNorth::set(Comparator::getOutput());
 	}

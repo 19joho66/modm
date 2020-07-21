@@ -11,10 +11,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # -----------------------------------------------------------------------------
 
-
 def common_vector_table_location(env):
     return env.get(":platform:cortex-m:vector_table_location", "rom")
-
 
 def common_vector_table(env):
     """
@@ -92,6 +90,9 @@ def common_memories(env):
     }
     return properties
 
+# See :platform:heap for explanation
+common_no_heap_section = (".Heap_is_not_implemented!__"
+        "Please_include_the__modm:platform:heap__module_in_your_project!")
 
 def common_linkerscript(env):
     """
@@ -134,6 +135,10 @@ def common_linkerscript(env):
             env.collector_values(":platform:cortex-m:linkerscript.table_extern.copy")]),
         "linkerscript_extern_heap": "\n".join([m.strip() for m in
             env.collector_values(":platform:cortex-m:linkerscript.table_extern.heap")]),
+
+        "with_cpp_exceptions": env.get(":stdc++:exceptions", False),
+        "with_heap": env.has_module(":platform:heap"),
+        "no_heap_section": common_no_heap_section,
     }
     properties.update(common_memories(env))
     return properties
@@ -150,27 +155,16 @@ def prepare(module, options):
 
     module.depends(
         ":architecture:interrupt",
-        ":architecture:assert",
-        ":architecture:memory",
-        ":platform:clock",
-        ":cmsis:device")
+        ":cmsis:device",
+        ":stdc++")
 
-    module.add_option(
-        EnumerationOption(
-            name="allocator",
-            description=FileReader("option/allocator.md"),
-            enumeration=["newlib", "block", "tlsf"],
-            default="newlib",
-            dependencies=lambda v: {"newlib": None,
-                                    "block": ":architecture:heap",
-                                    "tlsf": ":tlsf"}[v]))
     module.add_option(
         NumericOption(
             name="main_stack_size",
             description=FileReader("option/main_stack_size.md"),
             minimum=2 ** 8,
             maximum=2 ** 16,
-            default=2 ** 10 * 3 - 32))
+            default="3*1024"))
 
     memories = listify(options[":target"].get_driver("core")["memory"])
 
@@ -195,6 +189,15 @@ def prepare(module, options):
             minimum=0,
             maximum=hex(flash_size),
             default=0))
+
+    module.add_option(
+        PathOption(
+            name="linkerscript.override",
+            description="Path to project provided linkerscript",
+            default="",
+            empty_ok=True,
+            absolute=False,
+        ))
 
     module.add_collector(
         StringCollector(
@@ -250,54 +253,100 @@ def validate(env):
 
 def build(env):
     env.substitutions = env.query("vector_table")
-    env.substitutions["partname"] = env[":target"].partname
-    env.substitutions["with_fault_storage"] = env.has_module(":platform:fault")
+    env.substitutions.update({
+        "target": env[":target"].identifier,
+        "with_fault_storage": env.has_module(":platform:fault"),
+        "with_memory_traits": env.has_module(":architecture:memory"),
+        "with_assert": env.has_module(":architecture:assert"),
+    })
     env.outbasepath = "modm/src/modm/platform/core"
-
-    # dealing with C++
-    env.copy("cxxabi.cpp")
 
     # startup script
     env.copy("reset_handler.sx")
     env.template("startup.c.in")
     env.template("vectors.c.in")
+    env.collect(":build:linkflags", "-nostartfiles")
 
     # dealing with runtime assertions
-    env.copy("assert.cpp")
+    if env.has_module(":architecture:assert"):
+        env.template("assert.cpp.in")
+        env.template("assert_impl.hpp.in")
 
     # hardware init section
     env.copy("hardware_init.hpp")
 
     # busy-waiting delays
     if env.has_module(":architecture:delay"):
+        core = env.substitutions["core"]
+        if core == "cortex-m0":
+            loop = 4
+        elif core.startswith("cortex-m7"):
+            # Cortex-M7 is superscalar with dual issue ALU and a 6-stage pipeline
+            # _and_ branches in 1 cycle => The entire loop is in the pipeline.
+            loop = 1
+        else:
+            loop = 3
+        env.substitutions["loop"] = loop
+        # FIXME: Move out of this modules, maybe remove completely
+        # TODO: These numbers were measured from a few example applications.
+        #       A statistical analysis of the average overhead cycles is required!
+        target = env.substitutions["target"]
+        if target.family in ["f4"]:
+            overhead = 25
+        elif target.family in ["f1"]:
+            overhead = 12
+        else:
+            overhead = 30
+        env.substitutions["overhead"] = overhead
         env.template("delay.cpp.in")
-        env.copy("delay.hpp")
+        env.template("delay_impl.hpp.in")
 
     # GNU Build ID
+    env.collect(":build:linkflags", "-Wl,--build-id=sha1")
     if env.has_module(":architecture:build_id"):
         env.copy("build_id.cpp")
 
-    if env.has_module(":architecture:clock"):
-        # modm-test implements the clock methods itself
-        if not env.has_module(":test:architecture"):
-            env.copy("clock.cpp")
-
-    env.template("heap_table.cpp.in")
-    env.template("heap_table.hpp.in")
-    # everything to do with dynamic memory
-    if env["allocator"] == "newlib":
-        env.copy("heap_newlib.cpp")
-    elif env["allocator"] == "tlsf":
-        env.copy("heap_tlsf.cpp")
-    elif env["allocator"] == "block":
-        env.copy("heap_block_allocator.cpp")
+    # Heap table from linkerscript
+    if env.has_module(":architecture:memory"):
+        env.template("heap_table.cpp.in")
+        env.template("heap_table.hpp.in")
+    # Deprecate malloc and new if no heap is implemented!
+    if not env.has_module(":platform:heap"):
+        env.substitutions["no_heap_section"] = common_no_heap_section
+        env.template("../../heap/cortex/no_heap.c.in", "no_heap.c")
 
     if env.has_module(":architecture:atomic"):
-        env.copy("atomic_lock.hpp")
+        env.template("atomic_lock_impl.hpp.in")
 
     if env.has_module(":architecture:accessor"):
-        env.copy("flash_reader.hpp")
+        env.copy("flash_reader_impl.hpp")
 
     if env.has_module(":architecture:unaligned"):
-        env.template("unaligned.hpp.in")
+        env.template("unaligned_impl.hpp.in")
 
+    env.collect(":build:linkflags", "-Wl,--no-wchar-size-warning", "-L{project_source_dir}")
+    # Linkerscript
+    linkerscript_override_option = env["linkerscript.override"]
+    if linkerscript_override_option:
+        env.collect(":build:linkflags", "-T{}".format(linkerscript_override_option))
+    else:
+        env.collect(":build:linkflags", "-Tmodm/link/linkerscript.ld")
+
+    # Compilation for FPU
+    core = env[":target"].get_driver("core")["type"]
+    cpu = core.replace("fd", "").replace("f", "").replace("+", "plus")
+    env.collect(":build:archflags", "-mcpu={}".format(cpu), "-mthumb")
+
+    single_precision = True
+    fpu = core.replace("cortex-m", "").replace("+", "")
+    if "f" in fpu:
+        fpu_spec = {
+            "4f": "-mfpu=fpv4-sp-d16",
+            "7f": "-mfpu=fpv5-sp-d16",
+            "7fd": "-mfpu=fpv5-d16",
+        }[fpu]
+        env.collect(":build:archflags", "-mfloat-abi=hard", fpu_spec)
+        single_precision = ("-sp-" in fpu_spec)
+    if single_precision:
+        env.collect(":build:ccflags", "-fsingle-precision-constant",
+                                      "-Wdouble-promotion")

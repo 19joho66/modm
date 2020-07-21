@@ -14,9 +14,9 @@ LBUILD = lbuild
 SCONS = python3 `which scons`
 
 define compile-test
-	@$(RM) -r ../build/unittest/$(1)/modm
-	$(LBUILD) -c config/$(1).xml $(3) -p ../build/unittest/$(1) build --no-log
-	$(SCONS) -C ../build/unittest/$(1) $(2)
+	@$(RM) -r ../build/generated-unittest/$(1)
+	$(LBUILD) -c config/$(1).xml $(3) -p ../build/generated-unittest/$(1) build --no-log
+	$(SCONS) -C ../build/generated-unittest/$(1) $(2)
 endef
 define run-test
 	$(call compile-test,$(1),$(2) program,$(3))
@@ -60,18 +60,23 @@ run-nucleo-f103:
 
 
 compile-al-avreb-can:
-	$(call compile-test,al-avreb-can)
+	$(call compile-test,al-avreb-can,size)
 run-al-avreb-can:
-	$(call run-test,al-avreb-can)
+	$(call run-test,al-avreb-can,size)
 
 
 compile-arduino-uno:
-	$(call compile-test,arduino-uno)
+	$(call compile-test,arduino-uno,size)
 run-arduino-uno:
-	$(call run-test,arduino-uno)
+	$(call run-test,arduino-uno,size)
 
 
 compile-arduino-nano:
-	$(call compile-test,arduino-nano)
+	$(call compile-test,arduino-nano,size)
 run-arduino-nano:
-	$(call run-test,arduino-nano)
+	$(call run-test,arduino-nano,size)
+
+compile-mega-2560-pro:
+	$(call compile-test,mega-2560-pro,size)
+run-mega-2560-pro:
+	$(call run-test,mega-2560-pro,size)

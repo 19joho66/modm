@@ -16,7 +16,6 @@
 #include <modm/driver/temperature/ltc2984.hpp>
 #include <modm/architecture/interface/gpio.hpp>
 #include <modm/io/iostream.hpp>
-using namespace modm::literals;
 
 modm::IODeviceWrapper< Usart2, modm::IOBuffer::BlockIfFull > device;
 modm::IOStream logger(device);
@@ -82,8 +81,8 @@ public:
 
 		while(!PT_CALL(tempSensor.ping())) {
 			logger << "Device not reachable" << modm::endl;
-			this->timeout.restart(100);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(100ms);
+			PT_WAIT_UNTIL(timeout.isExpired());
 		}
 
 
@@ -122,8 +121,8 @@ public:
 
 			logger << "Time: " << (modm::Clock::now() - stamp) << modm::endl;
 
-			this->timeout.restart(1000);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(1s);
+			PT_WAIT_UNTIL(timeout.isExpired());
 		}
 
 		PT_END();

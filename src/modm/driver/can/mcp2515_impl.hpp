@@ -71,11 +71,11 @@ modm::Mcp2515<SPI, CS, INT>::initializeWithPrescaler(
 	// configuration mode
 	chipSelect.reset();
 	spi.transferBlocking(RESET);
-	modm::delayMilliseconds(1);
+	modm::delay_ms(1);
 	chipSelect.set();
 
 	// wait a bit to give the MCP2515 some time to restart
-	modm::delayMilliseconds(30);
+	modm::delay_ms(30);
 
 	chipSelect.reset();
 	spi.transferBlocking(WRITE);
@@ -97,7 +97,9 @@ modm::Mcp2515<SPI, CS, INT>::initializeWithPrescaler(
 	// check if we could read back some of the values
 	uint8_t readback = readRegister(CNF2);
 
-	modm_assert(readback == cnf[CNF2_idx], "mcp2515", "init", "readback");
+	if (not modm_assert_continue_fail_debug(readback == cnf[CNF2_idx], "mcp2515.init",
+				"Cannot read the CNF2 register of the MCP2515!", readback))
+		return false;
 
 	// reset device to normal mode and disable the clkout pin and
 	// wait until the new mode is active
@@ -293,7 +295,7 @@ modm::Mcp2515<SPI, CS, INT>::sendMessage(const can::Message& message)
 	}
 	chipSelect.set();
 
-	modm::delayMicroseconds(1);
+	modm::delay_us(1);
 
 	// send message via RTS command
 	chipSelect.reset();

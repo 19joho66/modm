@@ -13,7 +13,6 @@
 
 #include <modm/board.hpp>
 #include <modm/debug/logger.hpp>
-using namespace modm::literals;
 
 // ----------------------------------------------------------------------------
 // Set the log level
@@ -96,7 +95,7 @@ main()
 
 	while (true)
 	{
-		modm::delayMilliseconds(200);
+		modm::delay(200ms);
 		printAdc();
 	}
 

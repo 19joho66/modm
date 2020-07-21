@@ -14,7 +14,6 @@
 #include <modm/processing/protothread.hpp>
 #include <modm/processing/resumable.hpp>
 #include <modm/architecture/interface/i2c_device.hpp>
-using namespace modm::literals;
 
 /*
  * Test of I2C transaction with STM32L4
@@ -140,30 +139,30 @@ main()
 	LedGreen::set();
 
 	RF_CALL_BLOCKING(i2c.ping());
-	modm::delayMicroseconds(25);
+	modm::delay(25us);
 
 	RF_CALL_BLOCKING(i2c.write(0));
-	modm::delayMicroseconds(25);
+	modm::delay(25us);
 
 	RF_CALL_BLOCKING(i2c.write(1));
-	modm::delayMicroseconds(25);
+	modm::delay(25us);
 
 	RF_CALL_BLOCKING(i2c.write(2));
-	modm::delayMicroseconds(25);
+	modm::delay(25us);
 
 	RF_CALL_BLOCKING(i2c.writeRead(0, 5));
-	modm::delayMicroseconds(25);
+	modm::delay(25us);
 
 	RF_CALL_BLOCKING(i2c.writeRead(1, 5));
-	modm::delayMicroseconds(25);
+	modm::delay(25us);
 
 	RF_CALL_BLOCKING(i2c.writeRead(2, 5));
-	modm::delayMicroseconds(25);
+	modm::delay(25us);
 
 	// Blink if run without hanging.
 	while(true) {
 		LedGreen::toggle();
-		modm::delayMilliseconds(500);
+		modm::delay(500ms);
 	};
 
 	return 0;

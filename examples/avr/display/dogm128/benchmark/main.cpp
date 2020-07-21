@@ -20,6 +20,7 @@
 
 using namespace modm::platform;
 using namespace modm::literals;
+using namespace std::chrono_literals;
 
 
 namespace led
@@ -46,15 +47,11 @@ modm::DogM128< lcd::SPI, lcd::Cs, lcd::A0, lcd::Reset, true > display;
 
 using namespace modm::glcd;
 
-// timer interrupt routine
-MODM_ISR(TIMER2_COMPA)
-{
-	modm::Clock::increment();
-}
-
 void
 setup()
 {
+	SystemClock::enable();
+
 	led::R::set();
 	led::G::set();
 	led::B::reset();
@@ -65,13 +62,6 @@ setup()
 
 	lcd::SPI::connect<lcd::Sck::BitBang, lcd::Mosi::BitBang>();
 	lcd::SPI::initialize<SystemClock, 2_MHz>();
-
-	// timer initialization
-	// compare-match-interrupt every 1 ms at 14.7456 MHz
-	TCCR2A = (1 << WGM21);
-	TCCR2B = (1 << CS22);
-	TIMSK2 = (1 << OCIE2A);
-	OCR2A = 230;
 
 	// enable interrupts
 	enableInterrupts();
@@ -87,7 +77,7 @@ introScreen()
 			modm::accessor::asFlash(bitmap::rca_logo_128x64));
 	display.update();
 
-	modm::delayMilliseconds(2000);
+	modm::delay(2s);
 
 	display.clear();
 
@@ -108,28 +98,28 @@ introScreen()
 
 	display.update();
 
-	modm::delayMilliseconds(1000);
+	modm::delay(1s);
 	display.setCursor(Point(40, 55));
 
 	display << "5 ";
 	display.update();
-	modm::delayMilliseconds(1000);
+	modm::delay(1s);
 
 	display << "4 ";
 	display.update();
-	modm::delayMilliseconds(1000);
+	modm::delay(1s);
 
 	display << "3 ";
 	display.update();
-	modm::delayMilliseconds(1000);
+	modm::delay(1s);
 
 	display << "2 ";
 	display.update();
-	modm::delayMilliseconds(1000);
+	modm::delay(1s);
 
 	display << "1";
 	display.update();
-	modm::delayMilliseconds(1000);
+	modm::delay(1s);
 
 	display.clear();
 }
@@ -164,7 +154,7 @@ main()
 
 	display.setFont(modm::font::FixedWidth5x8);
 
-	modm::ShortPeriodicTimer timer(1000);
+	modm::ShortPeriodicTimer timer(1s);
 	while (true)
 	{
 		uint8_t iter = 0;

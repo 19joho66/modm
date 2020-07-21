@@ -33,9 +33,6 @@ def prepare(module, options):
         PathOption(name="unittest.source", default="", empty_ok=True, absolute=True,
                    description=descr_unittest_source))
     module.add_option(
-        PathOption(name="unittest.runner", default="", empty_ok=True, absolute=True,
-                   description=descr_unittest_runner))
-    module.add_option(
         EnumerationOption(name="info.git", default="Disabled",
                           enumeration=["Disabled", "Info", "Info+Status"],
                           description=descr_info_git))
@@ -69,7 +66,7 @@ def build(env):
     def flag_format(flag):
         subs = {
             "target_base": "\"${TARGET.base}\"",
-            "linkdir": "abspath(\"link\")"
+            "linkdir": "abspath(\"..\")"
         }
         flag = '"{}"'.format(flag)
         vals = ["{}={}".format(t, r) for t, r in subs.items() if "{{{}}}".format(t) in flag]
@@ -87,11 +84,8 @@ def build(env):
         "ext/dlr/scons/site_tools"
     }
     tools = {
-        "artifact",
         "build_target",
         "find_files",
-        "gdb",
-        "log_itm",
         "qtcreator",
         "settings_buildpath",
         "template",
@@ -104,15 +98,16 @@ def build(env):
     if has_info_tool:
         tools.add("info")
     if len(env["unittest.source"]):
-        tools.add("unittest")
+        tools.add("unittestm")
 
     device = env.query("::device")
     if device["core"].startswith("cortex-m"):
-        tools.update({"compiler_arm_none_eabi_gcc", "program_openocd",
-                      "black_magic_probe", "dfu_stm32_programmer",
-                      "utils_buildsize", "postmortem_gdb"})
+        tools.update({"compiler_arm_none_eabi_gcc", "size", "log_itm", "artifact",
+                      "openocd", "openocd_remote", "bmp", "crashdebug", "dfu"})
+        if device["platform"] in ["sam"]:
+            tools.update({"bossac"})
     elif device["core"].startswith("avr"):
-        tools.update({"compiler_avr_gcc", "utils_buildsize", "program_avrdude"})
+        tools.update({"compiler_avr_gcc", "size", "avrdude"})
     else: # hosted
         tools.update({"compiler_hosted_gcc"})
 
@@ -146,6 +141,7 @@ def build(env):
     env.substitutions = env.query("::device")
     env.substitutions["upload_with_artifact"] = env.has_module(":crashcatcher")
     env.substitutions["with_compilation_db"] = env.has_module(":build:compilation_db")
+    env.substitutions["program_extension"] = ".exe" if env[":target"].identifier.family == "windows" else ".elf"
     env.outbasepath = "modm/scons/site_tools"
     env.template("resources/build_target.py.in", "build_target.py")
 
@@ -182,7 +178,6 @@ def post_build(env):
         subs["image_source"] = env.relative_outpath(env["image.source"])
     if is_unittest:
         subs["unittest_source"] = env.relative_outpath(env["unittest.source"])
-        subs["unittest_runner"] = env.relative_outpath(env["unittest.runner"])
     if has_xpcc_generator:
         subs.update({
             "generator_source": env.relative_outpath(env.get(":communication:xpcc:generator:source", "")),
@@ -192,6 +187,9 @@ def post_build(env):
         })
     if subs["platform"] == "avr":
         subs.update(env.query("::avrdude_options"))
+    if subs["platform"] == "sam":
+        subs.update({"bossac_offset": env.get(":platform:cortex-m:linkerscript.flash_offset", None),
+                     "bossac_options": " ".join(env.collector_values(":build:bossac.options"))})
     # Set these substitutions for all templates
     env.substitutions = subs
 
@@ -263,11 +261,6 @@ When this path is declared, the generated SConstruct will compile **only** the
 unittests, not your application source code!
 You should use separate project configurations for compiling your unittest and
 application!
-"""
-
-descr_unittest_runner = """# Path to unittests runner template
-
-See modm/test/runners/*.cpp.in
 """
 
 descr_info_git = """# Generate git repository state information

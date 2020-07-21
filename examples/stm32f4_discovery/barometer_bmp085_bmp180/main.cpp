@@ -16,7 +16,6 @@
 #include <modm/io/iostream.hpp>
 #include <modm/architecture/interface/gpio.hpp>
 #include <modm/driver/pressure/bmp085.hpp>
-using namespace modm::literals;
 
 modm::IODeviceWrapper< Usart2, modm::IOBuffer::BlockIfFull > device;
 modm::IOStream stream(device);
@@ -56,8 +55,8 @@ public:
 			if (PT_CALL(barometer.ping()))
 				break;
 			// otherwise, try again in 100ms
-			this->timeout.restart(100);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(100ms);
+			PT_WAIT_UNTIL(timeout.isExpired());
 		}
 
 		stream << "Device responded" << modm::endl;
@@ -69,8 +68,8 @@ public:
 			if (PT_CALL(barometer.initialize()))
 				break;
 			// otherwise, try again in 100ms
-			this->timeout.restart(100);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(100ms);
+			PT_WAIT_UNTIL(timeout.isExpired());
 		}
 
 		stream << "Device configured" << modm::endl;
@@ -92,7 +91,7 @@ public:
 
 		while (true)
 		{
-			static modm::ShortPeriodicTimer timer(250);
+			static modm::ShortPeriodicTimer timer(250ms);
 
 			PT_WAIT_UNTIL(timer.execute());
 

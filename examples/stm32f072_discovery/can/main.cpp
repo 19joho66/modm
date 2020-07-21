@@ -14,7 +14,6 @@
 #include <modm/board.hpp>
 #include <modm/processing/timer.hpp>
 #include <modm/debug/logger.hpp>
-using namespace modm::literals;
 
 /**
  * Example of CAN Hardware on STM32 F0 Discovery Board.
@@ -98,7 +97,7 @@ main()
 	msg1.data[0] = 0x11;
 	Can::sendMessage(msg1);
 
-	modm::ShortPeriodicTimer pTimer(1000);
+	modm::ShortPeriodicTimer pTimer(1s);
 
 	const auto silent    = static_cast<bool>(CAN->BTR & CAN_BTR_SILM);
 	const auto loop_back = static_cast<bool>(CAN->BTR & CAN_BTR_LBKM);

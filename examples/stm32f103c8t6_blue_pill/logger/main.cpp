@@ -16,7 +16,6 @@
 #include <modm/debug/logger.hpp>
 #include <modm/processing/timer.hpp>
 #include <modm/processing/protothread.hpp>
-using namespace modm::literals;
 
 // ----------------------------------------------------------------------------
 // Set the log level
@@ -38,7 +37,7 @@ class BlinkThread : public modm::pt::Protothread
 public:
 	BlinkThread()
 	{
-		timeout.restart(100);
+		timeout.restart(100ms);
 	}
 
 	bool
@@ -51,12 +50,12 @@ public:
 			Board::LedGreen::reset();
 
 			PT_WAIT_UNTIL(timeout.isExpired());
-			timeout.restart(100);
+			timeout.restart(100ms);
 
 			Board::LedGreen::set();
 
 			PT_WAIT_UNTIL(timeout.isExpired()) ;
-			timeout.restart(900);
+			timeout.restart(900ms);
 
 			MODM_LOG_INFO << "Seconds since reboot: " << ++uptime << modm::endl;
 		}

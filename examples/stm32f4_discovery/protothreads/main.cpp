@@ -17,7 +17,6 @@
 #include <modm/driver/temperature/tmp102.hpp>
 
 #include <modm/io/iostream.hpp>
-using namespace modm::literals;
 
 modm::IODeviceWrapper< Usart2, modm::IOBuffer::BlockIfFull > device;
 modm::IOStream stream(device);
@@ -47,8 +46,8 @@ public:
 			if (PT_CALL(temp.ping()))
 				break;
 			// otherwise, try again in 100ms
-			this->timeout.restart(100);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(100ms);
+			PT_WAIT_UNTIL(timeout.isExpired());
 		}
 
 
@@ -85,8 +84,8 @@ public:
 				stream << modm::endl;
 				if (result) stream << "Heat me up!" << modm::endl;
 			}
-			this->timeout.restart(200);
-			PT_WAIT_UNTIL(this->timeout.isExpired());
+			timeout.restart(200ms);
+			PT_WAIT_UNTIL(timeout.isExpired());
 			Board::LedRed::toggle();
 		}
 

@@ -22,11 +22,11 @@ implemented as follows:
 6. Execute shared hardware initialization functions.
 7. Copy data from internal flash to *external* RAM.
 8. Zero sections in *external* RAM.
-9. Initialize heap via `__modm_initialize_memory()` (provided by the
-   `modm:platform:cortex-m:allocator` option).
+9. Initialize heap via `__modm_initialize_memory()` (implemented by the
+   `modm:platform:heap` module).
 10. Call static constructors.
 11. Call `main()` application entry point.
-12. If `main()` returns, assert on `core.main.exit` (only in debug profile).
+12. If `main()` returns, assert on `main.exit` (only in debug profile).
 13. Reboot if assertion returns.
 
 
@@ -101,7 +101,7 @@ linkerscript and the `Reset_Handler` is defined by the startup script.
 All handlers are weakly aliased to `Undefined_Handler`, which is called if an
 IRQ is enabled, but no handler is defined for it. This default handler
 determines the currectly active IRQ, sets its priority to the lowest level, and
-disables the IRQ from firing again and then asserts on `core.nvic.undefined`
+disables the IRQ from firing again and then asserts on `nvic.undef`
 with the (signed) IRQ number as context.
 
 The lowering of the priority is necessary, since the assertion handlers (see
@@ -288,3 +288,35 @@ env.collect(":platform:cortex-m:linkerscript.table_extern.heap", linkerscript_he
     and paste the result *as is* into the linkerscripts. No input validation is
     performed, so if you receive linker errors with your additions, please check
     the GNU LD documentation first.
+
+
+## Blocking Delay
+
+The delay functions as defined by `modm:architecture:delay` are implemented via
+software loop or hardware cycle counter (via DWT->CYCCNT, not available on
+ARMv6-M devices) and have the following limitations:
+
+- nanosecond delay is implemented as a tight loop with better than 100ns
+  resolution and accuracy at any CPU frequency.
+- microsecond delay has a maximum delay of 10 seconds.
+- millisecond delay is implemented via `modm::delay_us(ms * 1000)`, thus also
+  has a maximum delay of 10 seconds.
+
+
+## Compiler Options
+
+This module adds these architecture specific [compiler options][options]:
+
+- `-mcpu=cortex-m{type}`: the target to compile for.
+- `-mthumb`: only Thumb2 instruction set is supported.
+- `-mfloat-abi=hard`: if FPU available use the fastest ABI available.
+- `-mfpu=fpv{4, 5}-{sp}-d16`: single or double precision FPU.
+- `-fsingle-precision-constant`: if SP-FPU, treat all FP constants as SP.
+- `-Wdouble-promotion`: if SP-FPU, warn if FPs are promoted to doubles.
+
+In addition, these linker options are added:
+
+- `-nostartfiles`: modm implements its own startup script.
+- `-wrap,_{calloc, malloc, realloc, free}_r`: reimplemented Newlib with our own allocator.
+
+[options]: https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html

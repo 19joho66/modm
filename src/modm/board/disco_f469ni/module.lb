@@ -36,7 +36,10 @@ def prepare(module, options):
 
 def build(env):
     env.outbasepath = "modm/src/modm/board"
-    env.substitutions = {"board_has_logger": True}
+    env.substitutions = {
+        "with_logger": True,
+        "with_assert": env.has_module(":architecture:assert")
+    }
     env.template("../board.cpp.in", "board.cpp")
     env.copy('.')
     env.collect(":build:openocd.source", "board/stm32f469discovery.cfg")
@@ -58,7 +61,7 @@ linkerscript_sections = """\
     __sdramdata_load = LOADADDR (.sdramdata);   /* address in FLASH */
     __sdramdata_start = .;                      /* address in RAM */
 
-    KEEP(*(.sdramdata))
+    *(.sdramdata)
 
     . = ALIGN(4);
     __sdramdata_end = .;
@@ -66,6 +69,9 @@ linkerscript_sections = """\
 
 .heap_extern (NOLOAD) : ALIGN(4)
 {
+    *(.heap_extern)
+    . = ALIGN(4);
+
     __heap_extern_start = .;
     . = ORIGIN(SDRAM) + LENGTH(SDRAM);
     __heap_extern_end = .;
