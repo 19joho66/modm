@@ -224,9 +224,15 @@ def init(repo):
 
     # Add Jinja2 filters commonly used in this repository
     if 'Windows' in platform.platform():
+        def windowsify(path):
+            return path.replace("\\", '/')
+
         def windowsify(path, escape_level):
+            if escape_level==-1:
+                return path.replace("\\", '/')
+            else:
             path = normpath(path)
-            escaped = "\\" * (2 ** escape_level)
+            escaped = "/" * (2 ** escape_level)
             return path.replace("\\", escaped)
     else:
         def windowsify(path, escape_level):

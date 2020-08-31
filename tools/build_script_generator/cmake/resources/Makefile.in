@@ -22,9 +22,25 @@ all: cmake build
 cmake:
 	@cmake -E make_directory $(BUILD_DIR)/cmake-build-debug
 	@cmake -E make_directory $(BUILD_DIR)/cmake-build-release
-	@cd $(BUILD_DIR)/cmake-build-debug && cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug -G "$(CMAKE_GENERATOR)" {{ project_path }}
-	@cd $(BUILD_DIR)/cmake-build-release && cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Release -G "$(CMAKE_GENERATOR)" {{ project_path }}
+	@cmake -E make_directory $(BUILD_DIR)/cmake-build-test
+	@cmake -E make_directory $(BUILD_DIR)/cmake-build-test-debug
+	@cd $(BUILD_DIR)/cmake-build-debug && cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug -G "$(CMAKE_GENERATOR)" {{ project_path | modm.windowsify(escape_level=1) }}
+	@cd $(BUILD_DIR)/cmake-build-release && cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Release -G "$(CMAKE_GENERATOR)" {{ project_path | modm.windowsify(escape_level=1) }}
+	@cd $(BUILD_DIR)/cmake-build-test && cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -G "$(CMAKE_GENERATOR)" {{ project_path | modm.windowsify(escape_level=1) }}
+	@cd $(BUILD_DIR)/cmake-build-test-debug && cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -G "$(CMAKE_GENERATOR)" {{ project_path | modm.windowsify(escape_level=1) }}
 
+#build-release:
+#	@cmake --build $(BUILD_DIR)/cmake-build-release
+#
+#build-debug:
+#	@cmake --build $(BUILD_DIR)/cmake-build-debug
+#
+#build-test:
+#	@cmake --build $(BUILD_DIR)/cmake-build-test
+#
+#build-test-debug:
+#	@cmake --build $(BUILD_DIR)/cmake-build-test-debug
+#
 clean:
 	@cmake --build $(BUILD_DIR)/cmake-build-release --target clean
 	@cmake --build $(BUILD_DIR)/cmake-build-debug --target clean
