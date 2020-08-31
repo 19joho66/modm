@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Niklas Hauser
+ * Copyright (c) 2018, Niklas Hauser
  *
  * This file is part of the modm project.
  *
@@ -9,4 +9,14 @@
  */
 // ----------------------------------------------------------------------------
 
-#include "amnb/node.hpp"
+#include <unittest/testsuite.hpp>
+
+class GpioSamplerTest : public unittest::TestSuite
+{
+public:
+	void
+	testTiming();
+
+	void
+	testVerifier();
+};

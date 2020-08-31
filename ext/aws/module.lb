@@ -11,12 +11,52 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # -----------------------------------------------------------------------------
 
+class FreeRTOS_TCP(Module):
+    def init(self, module):
+        module.name = "tcp"
+        module.description = """
+# a:FreeRTOS-Plus-TCP
+
+This module defines a default FreeRTOS IP config. If you need to change a
+configuration setting, then you can define a `FreeRTOSConfigIPLocal.h` file, which
+is included *after* at the end of the config. You must therefore first `#undef`
+the config macros, then redefine them with your options, for example:
+
+```c
+#undef ipconfigUSE_DNS
+#define ipconfigUSE_DNS 1
+```
+"""
+
+    def prepare(self, module, options):
+        return True
+
+    def build(self, env):
+        env.outbasepath = "modm/ext"
+        env.copy("freertos/FreeRTOS-Plus-TCP", "freertos_plus_tcp",
+            ignore=env.ignore_files("BufferAllocation_1.c"))
+        env.collect(":build:path.include", "modm/ext/freertos_plus_tcp/include")
+        env.template("FreeRTOSIPConfig.h.in", "freertos_plus_tcp/include/FreeRTOSIPConfig.h")
+# -----------------------------------------------------------------------------
+
 def init(module):
     module.name = "freertos"
     module.description = """\
 # a:FreeRTOS
 
 Amazon FreeRTOS port for modm to be used with via the `modm:processing:rtos` module.
+
+## Custom Configuration
+
+This module defines a default FreeRTOS config. If you need to change a
+configuration setting, then you can define a `FreeRTOSConfigLocal.h` file, which
+is included *after* at the end of the config. You must therefore first `#undef`
+the config macros, then redefine them with your options, for example:
+
+```c
+#undef configCHECK_FOR_STACK_OVERFLOW
+#define configCHECK_FOR_STACK_OVERFLOW 0
+```
 """
 
 def prepare(module, options):
@@ -36,6 +76,8 @@ def prepare(module, options):
         ":architecture:assert",
         ":cmsis:device",
         ":platform:clock")
+
+    module.add_submodule(FreeRTOS_TCP())
 
     return True
 
