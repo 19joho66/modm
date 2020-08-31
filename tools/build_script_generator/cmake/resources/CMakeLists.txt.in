@@ -50,3 +50,4 @@ add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_SIZE}
 #% FIXME: build path does not contain python tools of course
 #% add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD VERBATIM COMMAND python3 ./modm/modm_tools/size.py ${CMAKE_PROJECT_NAME}.elf "{{memories}}")
 %% endif
+endif()

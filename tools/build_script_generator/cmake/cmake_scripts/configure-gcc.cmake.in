@@ -37,6 +37,7 @@ else()
     %% else
         set(TOOL_EXECUTABLE_PREFIX "")
     %% endif
+    endif()
 endif()
 
 

@@ -17,7 +17,7 @@ CMAKE_FLAGS = -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON -DCMAKE_RULE_MESSAGES:BOOL
 .DEFAULT_GOAL := all
 
 ### Targets
-all: cmake build
+all: cmake build-release
 
 cmake:
 	@cmake -E make_directory $(BUILD_DIR)/cmake-build-debug
@@ -29,18 +29,6 @@ cmake:
 	@cd $(BUILD_DIR)/cmake-build-test && cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -G "$(CMAKE_GENERATOR)" {{ project_path | modm.windowsify(escape_level=1) }}
 	@cd $(BUILD_DIR)/cmake-build-test-debug && cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -G "$(CMAKE_GENERATOR)" {{ project_path | modm.windowsify(escape_level=1) }}
 
-#build-release:
-#	@cmake --build $(BUILD_DIR)/cmake-build-release
-#
-#build-debug:
-#	@cmake --build $(BUILD_DIR)/cmake-build-debug
-#
-#build-test:
-#	@cmake --build $(BUILD_DIR)/cmake-build-test
-#
-#build-test-debug:
-#	@cmake --build $(BUILD_DIR)/cmake-build-test-debug
-#
 clean:
 	@cmake --build $(BUILD_DIR)/cmake-build-release --target clean
 	@cmake --build $(BUILD_DIR)/cmake-build-debug --target clean
@@ -64,27 +52,27 @@ program: build
 %% elif core.startswith("cortex-m")
 MEMORIES = "{{ memories }}"
 size: build
-	@python3 modm/modm_tools/size.py $(ELF_FILE) $(MEMORIES)
+	@python modm/modm_tools/size.py $(ELF_FILE) $(MEMORIES)
 
 program: build
 	@python3 modm/modm_tools/openocd.py -f modm/openocd.cfg $(ELF_FILE)
 
 program-bmp: build
-	@python3 modm/modm_tools/bmp.py -p $(port) $(ELF_FILE)
+	@python modm/modm_tools/bmp.py -p $(port) $(ELF_FILE)
 
 ui?=tui
 debug: build
-	@python3 modm/modm_tools/gdb.py -x modm/gdbinit -x modm/openocd_gdbinit \
+	@python modm/modm_tools/gdb.py -x modm/gdbinit -x modm/openocd_gdbinit \
 			$(ELF_FILE) -ui=$(ui) \
 			openocd -f modm/openocd.cfg
 
 debug-bmp: build
-	@python3 modm/modm_tools/bmp.py -x modm/gdbinit \
+	@python modm/modm_tools/bmp.py -x modm/gdbinit \
 			$(ELF_FILE) -ui=$(ui) \
 			bmp -p $(port)
 
 debug-coredump: build
-	@python3 modm/modm_tools/gdb.py -x modm/gdbinit \
+	@python modm/modm_tools/gdb.py -x modm/gdbinit \
 			$(ELF_FILE) -ui=$(ui) \
 			crashdebug --binary-path modm/ext/crashcatcher/bins
 

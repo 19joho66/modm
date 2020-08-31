@@ -231,9 +231,9 @@ def init(repo):
             if escape_level==-1:
                 return path.replace("\\", '/')
             else:
-            path = normpath(path)
-            escaped = "/" * (2 ** escape_level)
-            return path.replace("\\", escaped)
+                path = normpath(path)
+                escaped = "/" * (2 ** escape_level)
+                return path.replace("\\", escaped)
     else:
         def windowsify(path, escape_level):
             return normpath(path)
