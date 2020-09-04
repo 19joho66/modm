@@ -32,10 +32,26 @@ cmake:
 clean:
 	@cmake --build $(BUILD_DIR)/cmake-build-release --target clean
 	@cmake --build $(BUILD_DIR)/cmake-build-debug --target clean
+	@cmake --build $(BUILD_DIR)/cmake-build-test  --target clean
+	@cmake --build $(BUILD_DIR)/cmake-build-test-debug --target clean
+
+clean-release:
+	@cmake --build $(BUILD_DIR)/cmake-build-release --target clean
+
+clean-debug:
+	@cmake --build $(BUILD_DIR)/cmake-build-debug --target clean
+
+clean-test:
+	@cmake --build $(BUILD_DIR)/cmake-build-test  --target clean
+
+clean-test-debug:
+	@cmake --build $(BUILD_DIR)/cmake-build-test-debug --target clean	
 
 cleanall:
 	@rm -rf $(BUILD_DIR)/cmake-build-release
 	@rm -rf $(BUILD_DIR)/cmake-build-debug
+	@rm -rf $(BUILD_DIR)/cmake-build-test
+	@rm -rf $(BUILD_DIR)/cmake-build-test-debug
 
 profile?=release
 build:
@@ -51,8 +67,12 @@ program: build
 
 %% elif core.startswith("cortex-m")
 MEMORIES = "{{ memories }}"
+MEM = $(subst ',\',$(MEMORIES))
+
 size: build
-	@python modm/modm_tools/size.py $(ELF_FILE) $(MEMORIES)
+	cmd /C "workon modm && echo. && echo. &&\
+		 python modm/modm_tools/size.py $(ELF_FILE) $(MEM) &&\
+		 deactivate"
 
 program: build
 	@python3 modm/modm_tools/openocd.py -f modm/openocd.cfg $(ELF_FILE)
