@@ -146,5 +146,9 @@ standard names. */
 #include <FreeRTOSConfigLocal.h>
 #endif
 
+#include "..\..\..\..\ThirdParty\SEGGER\SEGGER_SYSVIEW_FREERTOS.h"
+#define INCLUDE_xTaskGetIdleTaskHandle 1
+#define INCLUDE_pxTaskGetStackStart 1
+
 #endif /* FREERTOS_CONFIG_H */
 
