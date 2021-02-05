@@ -61,8 +61,11 @@ public:
 	setAddress(uint8_t address)
 	{
 		this->address = address;
-		setSeed();
 	}
+
+	void
+	setSeed(uint16_t seed)
+	{ lfsr = seed; }
 
 public:
 	bool
@@ -71,16 +74,21 @@ public:
 		if (tx_queue.isFull()) return false;
 		return tx_queue.push(std::move(Message(address, command, Type::Broadcast)));
 	}
+	bool
+	broadcast(uint8_t command, const uint8_t *data, size_t length)
+	{
+		if (tx_queue.isFull()) return false;
+		Message msg(address, command, length, Type::Broadcast);
+		uint8_t* t = msg.get<uint8_t>();
+		if (t == nullptr) return false;
+		std::memcpy(t, data, length);
+		return tx_queue.push(std::move(msg));
+	}
 	template< typename T >
 	bool
 	broadcast(uint8_t command, const T &argument)
 	{
-		if (tx_queue.isFull()) return false;
-		Message msg(address, command, sizeof(T), Type::Broadcast);
-		T* t = msg.get<T>();
-		if (t == nullptr) return false;
-		*t = argument;
-		return tx_queue.push(std::move(msg));
+		return broadcast(command, (const uint8_t *)&argument, sizeof(T));
 	}
 
 	template< class ReturnType = void, class ErrorType = void >
@@ -93,24 +101,29 @@ public:
 		RF_END_RETURN(request_msg);
 	}
 
+	template< class ReturnType = void, class ErrorType = void >
+	modm::ResumableResult< Result<ReturnType, ErrorType> >
+	request(uint8_t from, uint8_t command, const uint8_t *data, size_t length)
+	{
+		RF_BEGIN(1);
+		{
+			request_msg = Message(from, command, length, Type::Request);
+			uint8_t* arg = request_msg.get<uint8_t>();
+			if (arg == nullptr) {
+				request_msg = Response(Error::RequestAllocationFailed).msg;
+				RF_RETURN(request_msg);
+			}
+			std::memcpy(arg, data, length);
+		}
+		RF_CALL(request());
+		RF_END_RETURN(request_msg);
+	}
+
 	template< class ReturnType = void, class ErrorType = void, class T >
 	modm::ResumableResult< Result<ReturnType, ErrorType> >
 	request(uint8_t from, uint8_t command, const T &argument)
 	{
-		RF_BEGIN(1);
-		{
-			request_msg = Message(from, command, sizeof(T), Type::Request);
-			T* arg = request_msg.get<T>();
-			if constexpr (sizeof(T) > Message::SMALL_LENGTH) {
-				if (arg == nullptr) {
-					request_msg = Response(Error::RequestAllocationFailed).msg;
-					RF_RETURN(request_msg);
-				}
-			}
-			*arg = argument;
-		}
-		RF_CALL(request());
-		RF_END_RETURN(request_msg);
+		return request<ReturnType, ErrorType>(from, command, (uint8_t*)&argument, sizeof(T));
 	}
 
 public:
@@ -145,7 +158,7 @@ protected:
 		RF_BEGIN(3);
 
 		msg.setValid();
-		tx_counter = std::min(10, msg.command() >> (8 - PRIORITY_BITS));
+		tx_counter = std::min(MIN_TX_TRIES, uint8_t(msg.command() >> (8 - PRIORITY_BITS)));
 		while(1)
 		{
 			while (interface.isMediumBusy())
@@ -224,7 +237,7 @@ protected:
 					const auto listener = listenerList[ii];
 					if (rx_msg.command() == listener.command) {
 						if (complete) listener.call(rx_msg);
-						return true;
+						else return true;
 					}
 				}
 				break;
@@ -314,7 +327,8 @@ protected:
 	}
 	response_status{ResponseStatus::NotWaiting};
 
-	static constexpr uint8_t PRIORITY_BITS{5};
+	static constexpr uint8_t MIN_TX_TRIES{20};
+	static constexpr uint8_t PRIORITY_BITS{6};
 	static constexpr uint8_t RESCHEDULE_MASK_SHORT{7};
 	static constexpr uint8_t RESCHEDULE_MASK_LONG{11};
 };

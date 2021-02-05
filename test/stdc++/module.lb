@@ -17,9 +17,13 @@ def init(module):
 
 def prepare(module, options):
     module.depends(":stdc++")
+    target = options[":target"]
+    if target.identifier.platform != "avr":
+        return False
+
     return True
 
 
 def build(env):
-    env.outbasepath = "modm/test/stdc++"
+    env.outbasepath = "modm-test/src/stdc++"
     env.copy('.')

@@ -29,7 +29,7 @@ def repopath(path):
 def relpath(path):
     return os.path.relpath(path, str(repopath(".")))
 
-sys.path.append(str(repopath("ext/modm-devices/tools/device")))
+sys.path.append(str(repopath("ext/modm-devices")))
 from modm_devices.device_identifier import *
 
 
@@ -157,6 +157,9 @@ def create_target(argument):
         # Only allow the first board module to be built (they overwrite each others files)
         first_board = next((m for m in modules if ":board:" in m), None)
         modules = [m for m in modules if ":board" not in m or m == first_board]
+
+        # Remove :tinyusb:host modules, they conflict with :tinyusb:device modules
+        modules = [m for m in modules if ":tinyusb:host" not in m]
 
         # Remove :architecture modules. Only the :architecture modules for which actual implementations
         #  exist are include as dependencies of the :platform modules.

@@ -20,10 +20,9 @@ class Accessor(Module):
         return True
 
     def build(self, env):
-        env.substitutions = {"with_io": env.has_module(":io")}
         env.outbasepath = "modm/src/modm/architecture"
         env.copy("interface/accessor.hpp")
-        env.template("interface/accessor_flash.hpp.in")
+        env.copy("interface/accessor_flash.hpp")
         env.copy("interface/accessor_ram.hpp")
 
 # -----------------------------------------------------------------------------
@@ -47,13 +46,15 @@ class Assert(Module):
         module.description = FileReader("interface/assert.md")
 
     def prepare(self, module, options):
+        platform = options[":target"].identifier.platform
         module.add_option(
-            BooleanOption(name="with_description",
-                          default=options[":target"].identifier.platform in ["hosted"],
-                          description=Assert.with_description_descr))
+            EnumerationOption(name="with_description",
+                              description=Assert.with_description_descr,
+                              default="release" if platform == "hosted" else "debug",
+                              enumeration=["off", "debug", "release"]))
 
         module.depends(":architecture:register")
-        if options[":target"].identifier.platform in ["avr"]:
+        if platform == "avr":
             module.depends(":architecture:accessor")
         return True
 
@@ -123,12 +124,10 @@ class Can(Module):
         return True
 
     def build(self, env):
-        env.substitutions = {"with_io": env.has_module(":io")}
         env.outbasepath = "modm/src/modm/architecture"
         env.copy("interface/can.hpp")
         env.copy("interface/can.cpp")
-        env.template("interface/can_message.hpp.in")
-        env.template("interface/can_message.cpp.in")
+        env.copy("interface/can_message.hpp")
 # -----------------------------------------------------------------------------
 
 class Clock(Module):
@@ -141,9 +140,8 @@ class Clock(Module):
         return True
 
     def build(self, env):
-        env.substitutions = {"with_io": env.has_module(":io")}
         env.outbasepath = "modm/src/modm/architecture"
-        env.template("interface/clock.hpp.in")
+        env.copy("interface/clock.hpp")
 # -----------------------------------------------------------------------------
 
 class Delay(Module):
@@ -197,11 +195,8 @@ class I2c(Module):
         return True
 
     def build(self, env):
-        env.substitutions = {"with_io": env.has_module(":io")}
         env.outbasepath = "modm/src/modm/architecture"
-        env.template("interface/i2c.hpp.in")
-        if env.has_module(":io"):
-            env.copy("interface/i2c.cpp")
+        env.copy("interface/i2c.hpp")
         env.copy("interface/i2c_master.hpp")
         env.copy("interface/i2c_transaction.hpp")
 # -----------------------------------------------------------------------------
@@ -300,9 +295,8 @@ class Register(Module):
         return True
 
     def build(self, env):
-        env.substitutions = {"with_io": env.has_module(":io")}
         env.outbasepath = "modm/src/modm/architecture"
-        env.template("interface/register.hpp.in")
+        env.copy("interface/register.hpp")
 # -----------------------------------------------------------------------------
 
 class Spi(Module):
@@ -401,7 +395,7 @@ def prepare(module, options):
 def build(env):
     env.outbasepath = "modm/src/modm/architecture"
 
-    headers = env.generated_local_files(filterfunc=lambda path: re.match(r"interface/.*\.hpp", path))
+    headers = env.generated_local_files(filterfunc=lambda path: re.match(r"interface[\\/]\w+\.hpp", path))
     env.template("interface.hpp.in", substitutions={"headers": sorted(headers)})
 
     env.copy("utils.hpp")

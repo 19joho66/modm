@@ -10,8 +10,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # LBUILD = python3 ../../library-builder/scripts/lbuild
-LBUILD = lbuild
-SCONS = python3 `which scons`
+# LBUILD = lbuild
+LBUILD = $(shell which lbuild)
+# SCONS = python3 `which scons`
+SCONS = scons
 
 define compile-test
 	@$(RM) -r ../build/generated-unittest/$(1)
@@ -27,6 +29,8 @@ run-hosted-linux:
 	$(call compile-test,hosted,run,-D":target=hosted-linux")
 run-hosted-darwin:
 	$(call compile-test,hosted,run,-D":target=hosted-darwin")
+run-hosted-windows:
+	$(call compile-test,hosted,run,-D":target=hosted-windows")
 
 
 compile-nucleo-f401:
@@ -47,16 +51,27 @@ run-nucleo-f446:
 	$(call run-test,nucleo-f446,size)
 
 
+compile-nucleo-f446ze:
+	$(call compile-test,nucleo-f446ze,size)
+run-nucleo-f446ze:
+	$(call run-test,nucleo-f446ze,size)
+
+
 compile-nucleo-l432:
 	$(call compile-test,nucleo-l432,size)
 run-nucleo-l432:
 	$(call run-test,nucleo-l432,size)
 
 
-compile-nucleo-f103:
-	$(call compile-test,nucleo-f103,size)
-run-nucleo-f103:
-	$(call run-test,nucleo-f103,size)
+compile-nucleo-f103_A:
+	$(call compile-test,nucleo-f103_A,size)
+run-nucleo-f103_A:
+	$(call run-test,nucleo-f103_A,size)
+
+compile-nucleo-f103_B:
+	$(call compile-test,nucleo-f103_B,size)
+run-nucleo-f103_B:
+	$(call run-test,nucleo-f103_B,size)
 
 
 compile-al-avreb-can:
@@ -71,10 +86,40 @@ run-arduino-uno:
 	$(call run-test,arduino-uno,size)
 
 
-compile-arduino-nano:
-	$(call compile-test,arduino-nano,size)
-run-arduino-nano:
-	$(call run-test,arduino-nano,size)
+# Currenly only unittests _A, _C, _D, _E, _G are functional
+compile-arduino-nano_A:
+	$(call compile-test,arduino-nano_A,size)
+run-arduino-nano_A:
+	$(call run-test,arduino-nano_A,size)
+compile-arduino-nano_B:
+	$(call compile-test,arduino-nano_B,size)
+run-arduino-nano_B:
+	$(call run-test,arduino-nano_B,size)
+compile-arduino-nano_C:
+	$(call compile-test,arduino-nano_C,size)
+run-arduino-nano_C:
+	$(call run-test,arduino-nano_C,size)
+compile-arduino-nano_D:
+	$(call compile-test,arduino-nano_D,size)
+run-arduino-nano_D:
+	$(call run-test,arduino-nano_D,size)
+compile-arduino-nano_E:
+	$(call compile-test,arduino-nano_E,size)
+run-arduino-nano_E:
+	$(call run-test,arduino-nano_E,size)
+compile-arduino-nano_F:
+	$(call compile-test,arduino-nano_F,size)
+run-arduino-nano_F:
+	$(call run-test,arduino-nano_F,size)
+compile-arduino-nano_G:
+	$(call compile-test,arduino-nano_G,size)
+run-arduino-nano_G:
+	$(call run-test,arduino-nano_G,size)
+compile-arduino-nano_H:
+	$(call compile-test,arduino-nano_H,size)
+run-arduino-nano_H:
+	$(call run-test,arduino-nano_H,size)
+
 
 compile-mega-2560-pro:
 	$(call compile-test,mega-2560-pro,size)

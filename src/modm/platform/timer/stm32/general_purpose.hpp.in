@@ -108,7 +108,7 @@ public:
 	};
 
 	// This type is the internal size of the counter.
-%% if id in [2, 5] and (target["family"] in ["f2", "f3", "f4", "f7", "l1", "l4"])
+%% if id in [2, 5] and (target["family"] in ["f2", "f3", "f4", "f7", "l1", "l4", "g4"])
 	// Timer 2 and 5 are the only one which have the size of 32 bit
 	typedef uint32_t Value;
 
@@ -164,6 +164,12 @@ public:
 		TIM{{ id }}->PSC = prescaler - 1;
 	}
 
+	static uint16_t
+	getPrescaler()
+	{
+		return (TIM{{ id }}->PSC + 1);
+	}
+
 	static inline void
 	setOverflow(Value overflow)
 	{
@@ -193,6 +199,14 @@ public:
 		return overflow;
 	}
 
+	/* Returns the frequency of the timer */
+	template<class SystemClock>
+	static uint32_t
+	getTickFrequency()
+	{
+		return SystemClock::Timer{{ id }} / (TIM{{ id }}->PSC + 1);
+	}
+
 	static inline void
 	applyAndReset()
 	{
@@ -213,7 +227,7 @@ public:
 	}
 
 
-%% if target.family not in ["l1"] and id not in [14]
+%% if target.family not in ["l1"]
 	static inline void
 	enableOutput()
 	{

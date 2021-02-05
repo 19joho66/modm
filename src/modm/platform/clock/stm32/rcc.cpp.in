@@ -5,7 +5,7 @@
  * Copyright (c) 2012, 2016, Sascha Schade
  * Copyright (c) 2012, 2014-2019, Niklas Hauser
  * Copyright (c) 2013-2014, Kevin Läufer
- * Copyright (c) 2018, Christopher Durand
+ * Copyright (c) 2018, 2021, Christopher Durand
  *
  * This file is part of the modm project.
  *
@@ -17,14 +17,15 @@
 
 #include "rcc.hpp"
 
-/// @cond
+// CMSIS Core compliance
+uint32_t modm_fastdata SystemCoreClock({{ "{0:,}".format((1000000 * hsi_frequency)|int).replace(',', "'") }});
+modm_weak void SystemCoreClockUpdate() { /* Nothing to update */ }
+
 namespace modm::platform
 {
-uint32_t modm_fastdata fcpu({{ "{0:,}".format((1000000 * hsi_frequency)|int).replace(',', "'") }});
 uint16_t modm_fastdata delay_fcpu_MHz({{ hsi_frequency }});
 uint16_t modm_fastdata delay_ns_per_loop({{ "{0:,}".format((loops * 1000.0 / hsi_frequency)|int).replace(',', "'") }});
 }
-/// @endcond
 
 // ----------------------------------------------------------------------------
 %% if target["family"] == "f0"
@@ -145,7 +146,7 @@ modm::platform::Rcc::enablePll(PllSource source, const PllFactors& pllFactors, u
 %% if target["family"] in ["f2", "f4", "f7"]
 	// Read reserved values and clear all other values
 	uint32_t tmp = RCC->PLLCFGR & ~(RCC_PLLCFGR_PLLSRC | RCC_PLLCFGR_PLLM
-			| RCC_PLLCFGR_PLLN | RCC_PLLCFGR_PLLP | RCC_PLLCFGR_PLLQ);
+			| RCC_PLLCFGR_PLLN | RCC_PLLCFGR_PLLP);
 
 	// PLLSRC source for pll and for plli2s
 	tmp |= static_cast<uint32_t>(source);
@@ -160,7 +161,10 @@ modm::platform::Rcc::enablePll(PllSource source, const PllFactors& pllFactors, u
 	tmp |= (((uint32_t) (pllFactors.pllP / 2) - 1) << RCC_PLLCFGR_PLLP_Pos) & RCC_PLLCFGR_PLLP;
 
 	// PLLQ (24) divider for USB frequency; (0-15)
-	// tmp |= (((uint32_t) pllQ) << RCC_PLLCFGR_PLLQ_Pos) & RCC_PLLCFGR_PLLQ;
+	if (pllFactors.pllQ != 0xff) {
+		tmp &= ~RCC_PLLCFGR_PLLQ;
+		tmp |= (((uint32_t) pllFactors.pllQ) << RCC_PLLCFGR_PLLQ_Pos) & RCC_PLLCFGR_PLLQ;
+	}
 
 	RCC->PLLCFGR = tmp;
 
@@ -180,7 +184,6 @@ modm::platform::Rcc::enablePll(PllSource source, const PllFactors& pllFactors, u
 %% if pll_p
 			// RCC_PLLCFGR_PLLPEN | RCC_PLLCFGR_PLLP |
 %% endif
-			// RCC_PLLCFGR_PLLQEN | RCC_PLLCFGR_PLLQ |
 			RCC_PLLCFGR_PLLREN | RCC_PLLCFGR_PLLR);
 
 	// PLLSRC source for pll
@@ -200,9 +203,12 @@ modm::platform::Rcc::enablePll(PllSource source, const PllFactors& pllFactors, u
 %% else
 	tmp |= ((uint32_t(pllFactors.pllR / 2) - 1) << RCC_PLLCFGR_PLLR_Pos) & RCC_PLLCFGR_PLLR;
 	// PLLQ (21) divider for USB frequency; (00: PLLQ = 2, 01: PLLQ = 4, etc.)
-	// tmp |= (((uint32_t) (pllQ / 2) - 1) << RCC_PLLCFGR_PLLQ_Pos) & RCC_PLLCFGR_PLLQ;
-	// enable pll USB clock output
-	// tmp |= RCC_PLLCFGR_PLLQEN;
+	if (pllFactors.pllQ != 0xff) {
+		tmp &= ~RCC_PLLCFGR_PLLQ;
+		tmp |= (((uint32_t) (pllFactors.pllQ / 2) - 1) << RCC_PLLCFGR_PLLQ_Pos) & RCC_PLLCFGR_PLLQ;
+		// enable pll USB clock output
+		tmp |= RCC_PLLCFGR_PLLQEN;
+	}
 %% endif
 
 	// enable pll CPU clock output
@@ -244,7 +250,7 @@ modm::platform::Rcc::enablePll(PllSource source, const PllFactors& pllFactors, u
 	uint32_t tmp = RCC->CFGR & ~(RCC_CFGR_USBPRE | {{pullmul}} | RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE);
 
 	// Divide Output for USB Clock by 1.5?
-	// tmp |= static_cast<uint32_t>(usb);
+	tmp |= static_cast<uint32_t>(pllFactors.usbPrediv);
 %% else
 	uint32_t tmp = RCC->CFGR & ~({{pullmul}} | RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE);
 %% endif
@@ -255,16 +261,19 @@ modm::platform::Rcc::enablePll(PllSource source, const PllFactors& pllFactors, u
 	// Pll multiplication factor
 	tmp |= (static_cast<uint32_t>(pllFactors.pllMul - 2) << 18) & {{pullmul}};
 
+%% if pll_hse_prediv2
+	if(pllFactors.enableHsePllPrediv2) {
+		tmp |= RCC_CFGR_PLLXTPRE;
+	}
+%% endif
+
+	RCC->CFGR = tmp;
+
 %% if pllprediv
 	%% set mask = 'RCC_CFGR2_PREDIV1' if target["family"] == "f1" else 'RCC_CFGR2_PREDIV'
-#ifdef {{mask}}
 	// HSE PREDIV division factor
 	RCC->CFGR2 = (RCC->CFGR2 & ~({{mask}})) | (uint32_t(pllFactors.pllPrediv - 1) & {{mask}});
-#else
-	if (uint32_t(pllFactors.pllPrediv - 1) & 0x1) tmp |= RCC_CFGR_PLLXTPRE;
-#endif
 %% endif
-	RCC->CFGR = tmp;
 %% if pllprediv2
 	RCC->CFGR2 = (RCC->CFGR2 & ~(RCC_CFGR2_PREDIV2)) | ((uint32_t(pllFactors.pllPrediv2 - 1) << 4) & RCC_CFGR2_PREDIV2);
 %% endif
@@ -277,6 +286,69 @@ modm::platform::Rcc::enablePll(PllSource source, const PllFactors& pllFactors, u
 	return tmp;
 %%endif
 }
+
+%% if pllsai_p_usb
+bool
+modm::platform::Rcc::enablePllSai(const PllSaiFactors& pllFactors, uint32_t waitCycles)
+{
+	// Read reserved values and clear all other values
+	uint32_t tmp = RCC->PLLSAICFGR & ~(
+%% if target["family"] == "f4" and target["name"] in "46"
+		RCC_PLLSAICFGR_PLLSAIM |
+%% endif
+		RCC_PLLSAICFGR_PLLSAIN | RCC_PLLSAICFGR_PLLSAIP);
+
+%% if target["family"] == "f4" and target["name"] in "46"
+	// PLLSAIM (0) = factor is user defined VCO input frequency must be configured to 2MHz
+	tmp |= ((uint32_t) pllFactors.pllSaiM) & RCC_PLLSAICFGR_PLLSAIM;
+%% endif
+
+	// PLLSAIN (6) = factor is user defined
+	tmp |= (((uint32_t) pllFactors.pllSaiN) << RCC_PLLSAICFGR_PLLSAIN_Pos) & RCC_PLLSAICFGR_PLLSAIN;
+
+	// PLLSAIP (16) divider for CLK48 frequency; (00: PLLP = 2, 01: PLLP = 4, etc.)
+	tmp |= (((uint32_t) (pllFactors.pllSaiP / 2) - 1) << RCC_PLLCFGR_PLLP_Pos) & RCC_PLLCFGR_PLLP;
+
+	RCC->PLLSAICFGR = tmp;
+
+	// enable pll
+	RCC->CR |= RCC_CR_PLLSAION;
+
+	while (not (tmp = (RCC->CR & RCC_CR_PLLSAIRDY)) and --waitCycles)
+		;
+
+	return tmp;
+}
+%% endif
+
+%% if overdrive
+bool
+modm::platform::Rcc::enableOverdriveMode(uint32_t waitCycles)
+{
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+
+%% set suffix = '1' if target["family"] == "f7" else ''
+
+	PWR->CR{{suffix}} |= PWR_CR{{suffix}}_ODEN;
+	auto waitCounter = waitCycles;
+	while (!(PWR->CSR{{suffix}} & PWR_CSR{{suffix}}_ODRDY))
+	{
+		if (--waitCounter == 0)
+			return false;
+	}
+
+	PWR->CR{{suffix}} |= PWR_CR{{suffix}}_ODSWEN;
+	waitCounter = waitCycles;
+	while (!(PWR->CSR{{suffix}} & PWR_CSR{{suffix}}_ODSWRDY))
+	{
+		if (--waitCounter == 0)
+			return false;
+	}
+
+	return true;
+}
+%% endif
+
 
 // ----------------------------------------------------------------------------
 bool

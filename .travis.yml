@@ -1,17 +1,23 @@
-os: osx
-osx_image: xcode11.3
+os: linux
+dist: focal  # Ubuntu 20.04LTS
+arch: arm64
+#arch: arm64-graviton2
+
+language: minimal
 
 before_install:
-  - brew update
-  - brew tap osx-cross/avr
-  - brew tap osx-cross/arm
-  - brew install git doxygen boost gcc avr-gcc arm-gcc-bin cmake || true
-  - brew upgrade boost gcc git || true
-  - pip3 install --user modm scons
-  - export PATH=/Users/travis/Library/Python/3.8/bin:/usr/local/bin:$PATH
+  - sudo apt-get update
+  - sudo apt-get install -y python3 python3-pip scons cmake doxygen gcc-10 g++-10 build-essential libboost-all-dev libwiringpi-dev
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 90 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
+  #- sudo apt-get install -y gcc-arm-none-eabi
+  - wget -qO- https://developer.arm.com/-/media/Files/downloads/gnu-rm/10-2020q4/gcc-arm-none-eabi-10-2020-q4-major-aarch64-linux.tar.bz2 | tar xj -C /opt
+  - export PATH="/opt/gcc-arm-none-eabi-10-2020-q4-major/bin:$PATH"
+  - pip3 install modm
+  - export PATH="~/.local/bin:$PATH"
+  - uname -a
 
 script:
-  - (cd test && make run-hosted-darwin)
+  - (cd test && make run-hosted-linux)
   - (cd examples && ../tools/scripts/examples_compile.py linux)
   - (cd examples && ../tools/scripts/examples_compile.py stm32f1_discovery nucleo_f103rb olimexino_stm32 stm32f103c8t6_blue_pill stm32f103c8t6_black_pill)
-  - (cd test && make compile-arduino-nano)
+  - (cd examples && ../tools/scripts/examples_compile.py rpi)
