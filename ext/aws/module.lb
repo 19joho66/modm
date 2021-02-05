@@ -34,7 +34,12 @@ the config macros, then redefine them with your options, for example:
     def build(self, env):
         env.outbasepath = "modm/ext"
         env.copy("freertos/FreeRTOS-Plus-TCP", "freertos_plus_tcp",
-            ignore=env.ignore_files("BufferAllocation_1.c"))
+            ignore=env.ignore_files("portable"))
+        env.copy("freertos/FreeRTOS-Plus-TCP/portable/BufferManagement/BufferAllocation_2.c", "freertos_plus_tcp/BufferAllocation_2.c")
+        # Copy the compiler support files
+        env.copy("freertos/FreeRTOS-Plus-TCP/portable/Compiler/GCC/pack_struct_start.h", "freertos_plus_tcp/include/pack_struct_start.h")
+        env.copy("freertos/FreeRTOS-Plus-TCP/portable/Compiler/GCC/pack_struct_end.h", "freertos_plus_tcp/include/pack_struct_end.h")
+
         env.collect(":build:path.include", "modm/ext/freertos_plus_tcp/include")
         env.template("FreeRTOSIPConfig.h.in", "freertos_plus_tcp/include/FreeRTOSIPConfig.h")
 # -----------------------------------------------------------------------------
@@ -100,8 +105,6 @@ def build(env):
     env.copy("{}/port.c".format(path), "freertos/port.c")
     # Copy the portmacro.h file
     env.copy("{}/portmacro.h".format(path), "freertos/inc/freertos/portmacro.h")
-    # Copy the head_3.c file that just wraps the libc malloc
-    env.copy("freertos/FreeRTOS/Source/portable/MemMang/heap_3.c", "freertos/heap_3.c")
 
     # Generate the FreeRTOSConfig.h file
     env.template("FreeRTOSConfig.h.in", "freertos/inc/freertos/FreeRTOSConfig.h")

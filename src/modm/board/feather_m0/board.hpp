@@ -13,13 +13,12 @@
 
 #pragma once
 
+#include <modm/architecture/interface/clock.hpp>
 #include <modm/debug/logger.hpp>
 #include <modm/platform.hpp>
-#include <modm/architecture/interface/clock.hpp>
 #define MODM_BOARD_HAS_LOGGER
 
 using namespace modm::platform;
-
 
 /// @ingroup modm_board_feather_m0
 namespace Board
@@ -27,13 +26,13 @@ namespace Board
 
 using namespace modm::literals;
 
-using ARef 	= GpioA03;
-using A0 		= GpioA02;
-using A1 		= GpioB08;
-using A2 		= GpioB09;
-using A3 		= GpioA04;
-using A4 		= GpioA05;
-using A5 		= GpioB02;
+using ARef	= GpioA03;
+using A0	= GpioA02;
+using A1	= GpioB08;
+using A2	= GpioB09;
+using A3	= GpioA04;
+using A4	= GpioA05;
+using A5	= GpioB02;
 
 using Sck 	= GpioB11;
 using Mosi 	= GpioB10;
@@ -54,9 +53,9 @@ using Sda  = GpioA23;
 using Scl  = GpioA22;
 
 // For RFM69 / LoRa boards
-using RadioRst	= GpioA08;
-using RadioIrq  = GpioA09;
-using RadioCs  	= GpioA06;
+using RadioRst = GpioA08;
+using RadioIrq = GpioA09;
+using RadioCs = GpioA06;
 
 // This is the red LED by the USB jack.
 using Led = D13;
@@ -65,6 +64,7 @@ using Led = D13;
 struct SystemClock
 {
 	static constexpr uint32_t Frequency = 48_MHz;
+	static constexpr uint32_t Usb = 48_MHz;
 	// static constexpr uint32_t Ahb  = Frequency;
 	// static constexpr uint32_t Apba = Frequency;
 	// static constexpr uint32_t Apbb = Frequency;
@@ -90,7 +90,7 @@ struct SystemClock
 	static bool inline
 	enable()
 	{
-    GenericClockController::setFlashLatency<Frequency>();
+		GenericClockController::setFlashLatency<Frequency>();
 		GenericClockController::initExternalCrystal();
 		GenericClockController::initDFLL48MHz();
 		GenericClockController::initOsc8MHz();
@@ -100,18 +100,25 @@ struct SystemClock
 	}
 };
 
-using LoggerDevice = modm::IODeviceWrapper< Uart0, modm::IOBuffer::BlockIfFull >;
-using Leds = SoftwareGpioPort< Led >;
+using LoggerDevice = modm::IODeviceWrapper<Uart0, modm::IOBuffer::BlockIfFull>;
+using Leds = Led;
 
 inline void
 initialize()
 {
 	SystemClock::enable();
 	SysTickTimer::initialize<SystemClock>();
-	Uart0::connect<Rx::Pad3, Tx::Pad2>();
+	Uart0::connect<Rx::Rx, Tx::Tx>();
 	Uart0::initialize<SystemClock, 115'200_Bd>();
 
 	Led::setOutput(modm::Gpio::Low);
 }
 
-} // Board namespace
+inline void
+initializeUsbFs()
+{
+	modm::platform::Usb::initialize<Board::SystemClock>();
+	modm::platform::Usb::connect<GpioA24::Dm, GpioA25::Dp>();
+}
+
+}  // namespace Board

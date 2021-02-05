@@ -24,7 +24,7 @@ from os.path import normpath
 
 # Check for miminum required lbuild version
 import lbuild
-min_lbuild_version = "1.13.2"
+min_lbuild_version = "1.14.1"
 if StrictVersion(getattr(lbuild, "__version__", "0.1.0")) < StrictVersion(min_lbuild_version):
     print("modm requires at least lbuild v{}, please upgrade!\n"
           "    pip3 install -U lbuild".format(min_lbuild_version))
@@ -48,7 +48,7 @@ def check_submodules():
               "    git submodule update --init\n")
 
 # Import modm-device tools
-sys.path.append(repopath("ext/modm-devices/tools/device"))
+sys.path.append(repopath("ext/modm-devices"))
 try:
     import modm_devices.parser
 except ModuleNotFoundError:
@@ -237,7 +237,10 @@ def init(repo):
     else:
         def windowsify(path, escape_level):
             return normpath(path)
+        def posixify(path):
+            return normpath(path)
     repo.add_filter("modm.windowsify", windowsify)
+    repo.add_filter("modm.posixify", posixify)
     repo.add_filter("modm.ord", lambda letter: ord(letter[0].lower()) - ord("a"))
     repo.add_filter("modm.chr", lambda num: chr(num + ord("A")))
 

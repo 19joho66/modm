@@ -28,7 +28,7 @@ FLASH_STORAGE(uint8_t monthDays[]) = {
  * but since we have no fancy years between 1970 and 2038 we can do:
  */
 #define LEAP_YEAR(year) 	((year % 4) == 0)
-#define SECONDS_PER_DAY		(60 * 60 * 24L)
+#define SECONDS_PER_DAY		(INT32_C(60) * 60 * 24)
 
 // ----------------------------------------------------------------------------
 void
@@ -69,7 +69,8 @@ modm::UnixTime::toDate(modm::Date* date) const
 			}
 		}
 		else {
-			monthLength = monthDays[month];
+			const auto daysInMonth = modm::accessor::Flash(monthDays);
+			monthLength = daysInMonth[month];
 		}
 
 		if (seconds >= monthLength) {
@@ -107,12 +108,13 @@ modm::Date::toUnixTimestamp() const
 			seconds += SECONDS_PER_DAY * 29;
 		}
 		else {
-			seconds += SECONDS_PER_DAY * monthDays[i];
+			const auto daysInMonth = modm::accessor::Flash(monthDays);
+			seconds += SECONDS_PER_DAY * daysInMonth[i];
 		}
 	}
 
 	seconds += (this->day - 1) * SECONDS_PER_DAY;
-	seconds +=  this->hour * 60 * 60;
+	seconds +=  this->hour * INT32_C(60) * 60;
 	seconds +=  this->minute * 60;
 	seconds +=  this->second;
 

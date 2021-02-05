@@ -74,6 +74,17 @@ public:
 	inline static void setAnalogInput() { PinSet::setAnalogInput(); }
 	/// @endcond
 
+%% if has_remap
+	/// Remap this GPIO onto physical pins with selectable GPIO mappings
+	inline static void remap() {
+	%% if remap_value
+		{{remap_reg}} |= {{remap_mask}};
+	%% else
+		{{remap_reg}} &= ~{{remap_mask}};
+	%% endif
+	};
+%% endif
+
 public:
 	// GpioOutput
 	// start documentation inherited
@@ -82,9 +93,9 @@ public:
 	inline static void set() { PinSet::set(); }
 	inline static void set(bool status) { PinSet::set(status); }
 	inline static void reset() { PinSet::reset(); }
-	inline static void toggle() {
-		if (isSet()) { reset(); }
-		else         { set();   }
+	inline static bool toggle() {
+		if (isSet()) { reset(); return true; }
+		else         { set();   return false; }
 	}
 	inline static bool isSet() { return ({{reg}}->ODR & mask); }
 	// stop documentation inherited
